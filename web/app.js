@@ -1,5 +1,5 @@
 'use strict';
-const $=id=>document.getElementById(id), teal='#267a70', orange='#c46743';
+const $=id=>document.getElementById(id), teal='#2563a6', orange='#c46743';
 let all=[], records=[];
 const mean=a=>a.length?a.reduce((s,r)=>s+r.G3,0)/a.length:null;
 const context=r=>+(r.internet==='no')+ +(r.traveltime>=3)+ +(r.Medu<3)+ +(r.Fedu<3);
@@ -11,6 +11,30 @@ function axes(labels){let s='';for(let y=0;y<=20;y+=5){let py=230-y*10;s+=`<line
 const xpos=(i,n)=>45+(i+.5)*475/n;
 function mark(tag,attrs,tip){return `<${tag} ${attrs} tabindex="0" data-tip="${tip}" aria-label="${tip}"><title>${tip}</title></${tag}>`;}
 function legend(items){return `<div class="legend">${items.map(([label,color])=>`<span><i style="background:${color}"></i>${label}</span>`).join('')}</div>`;}
+function staircase() {
+  const cohorts = groups(r => r.failures, 4);
+  const width = 475 / 4;
+  let svg = svgStart('Mean final grade by previous failures, shown as connected stair steps') + axes(['0','1','2','3']);
+  cohorts.forEach((rows,i) => {
+    const value = mean(rows);
+    if (value === null) return;
+    const top = 230 - value * 10;
+    const left = 45 + i * width;
+    svg += mark('rect', `x="${left}" y="${top}" width="${width}" height="${value*10}" fill="${teal}" fill-opacity="${.85-i*.12}"`, `${i} past failures; mean final grade ${fmt(value)}/20; n=${rows.length}`);
+    svg += `<path d="M${left},${top} H${left+width}" fill="none" stroke="${teal}" stroke-width="2"/><text class="value" x="${left+width/2}" y="${top-9}" text-anchor="middle">${fmt(value)}</text>`;
+    const next = mean(cohorts[i+1] || []);
+    if (next !== null) svg += `<line x1="${left+width}" x2="${left+width}" y1="${top}" y2="${230-next*10}" stroke="${teal}" stroke-width="2"/>`;
+  });
+  const first = mean(cohorts[0]);
+  if (first !== null) {
+    const edge = 45+width;
+    const top = 230-first*10;
+    svg += `<g role="img" aria-label="Illustration of a person losing balance near the first step edge"><g transform="translate(${edge-10},${top-2}) rotate(14)" fill="none" stroke="${orange}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="-43" r="5" fill="${orange}" stroke="none"/><path d="M3 -35 L-2 -18 L-8 0 M-2 -18 L13 -7 L18 -11 M1 -30 L-13 -39 M1 -30 L17 -36"/></g><text x="${edge+30}" y="${top-38}" fill="${orange}" font-size="10">Illustration</text></g>`;
+  }
+  svg += '<text x="282" y="276" text-anchor="middle">Recorded past class failures</text></svg>';
+  $('failures').innerHTML = legend([['Mean final grade',teal]]) + svg;
+}
+
 function bars(id,labels,series,title,xlabel){let s=svgStart(title)+axes(labels);let slot=475/labels.length,width=Math.min(65,slot*.68/series.length);series.forEach((ser,j)=>ser.values.forEach((a,i)=>{let m=mean(a);if(m===null)return;let x=xpos(i,labels.length)+(j-(series.length-1)/2)*width-width/2;let tip=`${ser.name}, ${labels[i]}: ${fmt(m)}/20; n=${a.length}`;s+=mark('rect',`x="${x}" y="${230-m*10}" width="${width-3}" height="${m*10}" fill="${ser.color}" rx="2"`,tip);if(series.length===1)s+=`<text class="value" x="${x+width/2}" y="${220-m*10}" text-anchor="middle">${fmt(m)}</text>`;}));s+=`<text x="282" y="276" text-anchor="middle">${xlabel}</text></svg>`;$(id).innerHTML=legend(series.map(s=>[s.name,s.color]))+s;}
 function lines(id,labels,series,title,xlabel){let s=svgStart(title)+axes(labels);series.forEach(ser=>{let path='',previous=false;ser.values.forEach((a,i)=>{let m=a.length?a.reduce((sum,r)=>sum+r[ser.grade||'G3'],0)/a.length:null;if(m===null){previous=false;return;}path+=`${previous?'L':'M'}${xpos(i,labels.length)},${230-m*10} `;previous=true;});s+=`<path d="${path}" fill="none" stroke="${ser.color}" stroke-width="3"/>`;ser.values.forEach((a,i)=>{if(!a.length)return;let m=a.reduce((sum,r)=>sum+r[ser.grade||'G3'],0)/a.length;s+=mark('circle',`cx="${xpos(i,labels.length)}" cy="${230-m*10}" r="5" fill="${ser.color}"`,`${ser.name}, ${labels[i]}: ${fmt(m)}/20; n=${a.length}`);});});$(id).innerHTML=legend(series.map(s=>[s.name,s.color]))+s+`<text x="282" y="276" text-anchor="middle">${xlabel}</text></svg>`;}
 function tree(){let low=records.filter(r=>r.G1<10),other=records.filter(r=>r.G1>=10),access=other.filter(r=>r.internet==='no'||r.traveltime>=3),rest=other.filter(r=>r.internet==='yes'&&r.traveltime<3);let node=(label,a,leaf=false)=>`<div class="tree-node ${leaf?'tree-leaf':''}">${label}<br><small>n=${a.length} · final mean ${fmt(mean(a))}</small></div>`;$('tree').innerHTML=node('First-period grade below 10?',records)+`<div class="tree-path"><div class="tree-branch"><small>↓ Yes</small>${node('Discuss learning support and barriers',low,true)}</div><div class="tree-branch"><small>↓ No</small>${node('No internet or commute above 30 min?',other)}<div class="tree-path"><div class="tree-branch"><small>↓ Yes</small>${node('Discuss access support',access,true)}</div><div class="tree-branch"><small>↓ No</small>${node('Check in; support on request',rest,true)}</div></div></div></div>`;}
@@ -23,55 +47,66 @@ const measures = {
 };
 
 function matrix() {
-  const xKey = $('scatter-x').value;
-  const yKey = $('scatter-y').value;
-  const x = measures[xKey], y = measures[yKey];
-  const byInternet = $('scatter-group').value === 'internet';
-  const cohorts = byInternet
-    ? [['Internet at home', teal, records.filter(r => r.internet === 'yes')],
-       ['No internet at home', orange, records.filter(r => r.internet === 'no')]]
-    : [['Mathematics', teal, records.filter(r => r.subject === 'Mathematics')],
-       ['Portuguese', orange, records.filter(r => r.subject === 'Portuguese')]];
-  const px = value => 60 + (value - x.min) / (x.max - x.min) * 450;
-  const py = value => 270 - (value - y.min) / (y.max - y.min) * 235;
+  const cohort = $('scatter-cohort').value;
+  const rows = records.filter(r => cohort === 'all' || r.internet === cohort);
+  const variables = ['absences', 'age', 'G1', 'G3'];
+  const shortLabels = ['Absences (days)', 'Age (years)', 'First grade (G1)', 'Final grade (G3)'];
+  const size = 218, offset = 54, padding = 23, span = 170;
+  let svg = '<svg viewBox="0 0 960 960" role="img" aria-label="Scatterplot matrix of absences, age, first-period grade and final grade"><title>Rows give vertical variables; columns give horizontal variables. Diagonal cells show distributions.</title>';
+  $('matrix-count').textContent = `${rows.length.toLocaleString()} course records`;
 
-  $('matrix').innerHTML = cohorts.map(([name, color, rows], panel) => {
-    // Aggregate identical coordinates; circle area is proportional to record count.
-    const points = new Map();
-    rows.forEach(row => {
-      const key = `${row[xKey]},${row[yKey]}`;
-      const point = points.get(key) || {x: row[xKey], y: row[yKey], n: 0};
-      point.n += 1;
-      points.set(key, point);
-    });
-    let plot = `<svg viewBox="0 0 540 340" role="img" aria-label="${name}: ${x.label} versus ${y.label}"><defs><clipPath id="scatter-clip-${panel}"><rect x="46" y="21" width="478" height="263"/></clipPath></defs>`;
-    y.ticks.forEach(value => {
-      plot += `<line x1="60" y1="${py(value)}" x2="510" y2="${py(value)}" stroke="#e1e5dc"/><text x="47" y="${py(value)+4}" text-anchor="end">${value}</text>`;
-    });
-    x.ticks.forEach(value => {
-      plot += `<line x1="${px(value)}" y1="35" x2="${px(value)}" y2="270" stroke="#edf0e9"/><text x="${px(value)}" y="292" text-anchor="middle">${value}</text>`;
-    });
-    plot += `<text x="60" y="16">${y.label}</text><text x="285" y="325" text-anchor="middle">${x.label}</text><g clip-path="url(#scatter-clip-${panel})">`;
-    // Draw large bubbles first so less frequent observations stay visible.
-    [...points.values()].sort((a,b) => b.n-a.n).forEach(point => {
-      const tip = `${name}; ${x.label}: ${point.x}; ${y.label}: ${point.y}; ${point.n} course record${point.n===1?'':'s'}`;
-      plot += mark('circle', `cx="${px(point.x)}" cy="${py(point.y)}" r="${2.6*Math.sqrt(point.n)}" fill="${color}" fill-opacity=".28" stroke="${color}" stroke-opacity=".65" stroke-width=".8" data-count="${point.n}"`, tip);
-    });
-    plot += '</g>';
-    if (!rows.length) plot += '<text x="285" y="155" text-anchor="middle">No records in this group</text>';
-    plot += '</svg>';
-    return `<section class="scatter-panel"><div class="scatter-title"><h4 style="color:${color}">${name}</h4><span>n = ${rows.length.toLocaleString()}</span></div>${plot}</section>`;
-  }).join('');
+  variables.forEach((key, i) => {
+    const center = offset + i * size + size / 2;
+    svg += `<text x="${center}" y="26" text-anchor="middle" class="matrix-label">${shortLabels[i]}</text><text transform="translate(16,${center}) rotate(-90)" text-anchor="middle" class="matrix-label">${shortLabels[i]}</text>`;
+  });
+
+  variables.forEach((yKey, yi) => variables.forEach((xKey, xi) => {
+    const x = measures[xKey], y = measures[yKey];
+    const left = offset + xi * size, top = offset + yi * size;
+    const px = value => padding + (value-x.min)/(x.max-x.min)*span;
+    const py = value => padding + span - (value-y.min)/(y.max-y.min)*span;
+    const ticks = m => m.ticks.filter((_,i) => m.ticks.length <= 5 || i%2 === 0 || i === m.ticks.length-1);
+    svg += `<g transform="translate(${left},${top})" data-cell="${yKey}-${xKey}"><rect x="3" y="3" width="212" height="212" fill="${xi===yi?'#f1f5f9':'white'}" stroke="#e2e8f0" rx="3"/>`;
+    if (xi === yi) {
+      const bins = Array.from({length:10}, () => 0);
+      rows.forEach(r => bins[Math.min(9,Math.floor((r[xKey]-x.min)/(x.max-x.min)*10))]++);
+      const max = Math.max(1,...bins);
+      bins.forEach((n,i) => {
+        const height = n/max*125;
+        const low = x.min+i*(x.max-x.min)/10, high = x.min+(i+1)*(x.max-x.min)/10;
+        const tip = `${x.label}: ${low.toFixed(1)} to ${high.toFixed(1)}${i===9?' (inclusive upper bound)':' (upper bound excluded)'}; ${n} course records`;
+        svg += mark('rect', `x="${padding+i*span/10}" y="${padding+span-height}" width="${span/10-2}" height="${height}" fill="${teal}" fill-opacity=".65" data-bin-count="${n}"`,tip);
+      });
+      svg += '<text x="108" y="32" text-anchor="middle" class="distribution-label">Distribution</text>';
+    } else {
+      ticks(y).forEach(v => svg += `<line x1="${padding}" x2="${padding+span}" y1="${py(v)}" y2="${py(v)}" stroke="#f1f5f9"/>`);
+      ticks(x).forEach(v => svg += `<line y1="${padding}" y2="${padding+span}" x1="${px(v)}" x2="${px(v)}" stroke="#f1f5f9"/>`);
+      const points = new Map();
+      rows.forEach(r => {
+        const key = `${r[xKey]},${r[yKey]}`;
+        const point = points.get(key) || {x:r[xKey],y:r[yKey],n:0};
+        point.n++; points.set(key,point);
+      });
+      [...points.values()].sort((a,b)=>b.n-a.n).forEach(p => {
+        svg += mark('circle', `cx="${px(p.x)}" cy="${py(p.y)}" r="${.95*Math.sqrt(p.n)}" fill="${teal}" fill-opacity=".32" stroke="${teal}" stroke-opacity=".5" stroke-width=".6" data-count="${p.n}"`, `${x.label}: ${p.x}; ${y.label}: ${p.y}; ${p.n} course records`);
+      });
+      if (!rows.length) svg += '<text x="108" y="110" text-anchor="middle">No records</text>';
+    }
+    ticks(x).forEach(v => svg += `<text x="${px(v)}" y="208" text-anchor="middle">${v}</text>`);
+    if (xi !== yi) ticks(y).forEach(v => svg += `<text x="18" y="${py(v)+3}" text-anchor="end">${v}</text>`);
+    svg += '</g>';
+  }));
+  $('matrix').innerHTML = svg + '</svg>';
 }
 
 function render(){records=all.filter(r=>($('subject').value==='all'||r.subject===$('subject').value)&&($('school').value==='all'||r.school===$('school').value));let pass=records.filter(r=>r.G3>=10).length,net=records.filter(r=>r.internet==='yes').length;$('stats').innerHTML=[[records.length.toLocaleString(),'Course records'],[fmt(mean(records))+' / 20','Mean final grade'],[records.length?(100*pass/records.length).toFixed(1)+'%':'—','Final grade ≥10'],[records.length?(100*net/records.length).toFixed(1)+'%':'—','Internet at home']].map(([n,l])=>`<div class="stat"><strong>${n}</strong><span>${l}</span></div>`).join('');$('filter-status').textContent=`${records.length} records in this view`;
-bars('failures',['0','1','2','3'],[{name:'Final grade',color:teal,values:groups(r=>r.failures,4)}],'Final grade by previous failures','Recorded past class failures');
+staircase();
 let key=$('support').value;bars('support-chart',['0','1','2','3','4'],[{name:'Support received',color:teal,values:groups(context).map(a=>a.filter(r=>r[key]==='yes'))},{name:'No support',color:orange,values:groups(context).map(a=>a.filter(r=>r[key]==='no'))}],'Support by context factor count','Context factor count');
 lines('factors',['0','1','2','3','4'],[{name:'Context factors',color:teal,values:groups(context)},{name:'Behavior factors',color:orange,values:groups(behavior)}],'Final grade by factor count','Factor count');
 let internet=records.filter(r=>r.internet==='yes'),noInternet=records.filter(r=>r.internet==='no');let internetSeries=[];for(let [name,color,a] of [['Internet at home',teal,internet],['No internet',orange,noInternet]])internetSeries.push({name,color,values:['G1','G2','G3'].map(g=>a.map(r=>({G3:r[g]})))});lines('internet',['G1','G2','G3'],internetSeries,'Grades over three periods by internet access','Grade period');tree();matrix();}
 function exportCsv(){let keys=Object.keys(all[0]),quote=v=>'"'+String(v).replaceAll('"','""')+'"';let csv=[keys.map(quote).join(','),...records.map(r=>keys.map(k=>quote(r[k])).join(','))].join('\r\n');let url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='school-success-filtered.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-for(let id of ['subject','school','support','scatter-x','scatter-y','scatter-group'])$(id).addEventListener('change',render);
-$('reset').onclick=()=>{$('subject').value='all';$('school').value='all';$('support').value='schoolsup';$('scatter-x').value='absences';$('scatter-y').value='G3';$('scatter-group').value='internet';render();};$('export').onclick=exportCsv;
+for(let id of ['subject','school','support','scatter-cohort'])$(id).addEventListener('change',render);
+$('reset').onclick=()=>{$('subject').value='all';$('school').value='all';$('support').value='schoolsup';$('scatter-cohort').value='all';render();};$('export').onclick=exportCsv;
 function tip(event){let target=event.target.closest('[data-tip]');if(!target)return;let box=target.getBoundingClientRect(),tooltip=$('tooltip');tooltip.textContent=target.dataset.tip;tooltip.hidden=false;tooltip.style.left=Math.max(8,Math.min(window.innerWidth-270,event.clientX||box.x))+'px';tooltip.style.top=Math.max(8,Math.min(window.innerHeight-70,(event.clientY||box.y)-45))+'px';}
 document.addEventListener('pointerover',tip);document.addEventListener('focusin',tip);document.addEventListener('pointerout',()=>{$('tooltip').hidden=true;});document.addEventListener('focusout',()=>{$('tooltip').hidden=true;});
 fetch('data.json').then(r=>{if(!r.ok)throw Error('Data could not be loaded');return r.json();}).then(data=>{all=data;render();}).catch(e=>{$('filter-status').textContent=e.message;});

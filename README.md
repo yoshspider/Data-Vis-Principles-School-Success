@@ -28,12 +28,12 @@ GitHub Actions also builds the executable on every push to `main`. Open the repo
 
 ## Visualizations
 
-1. Staircase bar chart: mean final grade by recorded previous failures.
+1. Connected staircase chart: mean final grade by recorded previous failures, with an illustrative figure leaning near a step edge. Step heights always follow the actual group means.
 2. Grouped bars: school or family support by context factor count.
 3. Two lines: mean final grade by context and behavior factor counts.
 4. Illustrative support discussion tree, annotated with group sizes and grades.
 5. Grade progression: G1, G2, G3 by home internet access.
-6. Numeric scatterplots: select absences, age, G1 or G2 against G1, G2 or G3; compare home internet access or course subjects.
+6. A 4 × 4 scatterplot matrix of absences, age, G1 and G3. Each off-diagonal cell compares a variable pair; diagonal histograms show distributions. A local cohort filter selects records with or without home internet.
 
 Filters select subject and school; export downloads the current records as CSV. Chart marks show means and sample sizes on hover or keyboard focus. Grade axes use 0–20 throughout. Missing groups are omitted rather than rendered as zero; line paths break at missing groups.
 
@@ -45,7 +45,7 @@ Context count (0–4): no internet, commute >30 minutes (`traveltime >= 3`), mat
 
 The decision tree is an explicit discussion aid: G1 <10 prompts learning support; otherwise no internet or commute >30 minutes prompts access support; otherwise routine check-in and support on request. It is not a fitted predictive model or allocation policy. Differences between supported and unsupported groups cannot estimate the benefit of support because support is not randomly assigned.
 
-Scatterplots use exact numeric coordinates, without jitter or interpolation. These measurements are recorded as integers, not truly continuous observations. Identical coordinate pairs are aggregated into bubbles whose area is proportional to course-record count. Both panels share fixed axis ranges and the same bubble scale; hover or focus reveals exact values and counts. Passing means G3 >=10 for this dashboard. Consult `data/student.txt` for original variable definitions (including the dataset's failure-code wording).
+Scatterplots use exact numeric coordinates, without jitter or interpolation. These measurements are recorded as integers, not truly continuous observations. Identical coordinate pairs are aggregated into bubbles whose area is proportional to course-record count. All matrix cells share fixed variable ranges and the same bubble scale; hover or focus reveals exact values and counts. Passing means G3 >=10 for this dashboard. Consult `data/student.txt` for original variable definitions (including the dataset's failure-code wording).
 
 ## Data attribution and reproducibility
 
