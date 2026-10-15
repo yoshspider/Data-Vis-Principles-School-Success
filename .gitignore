@@ -1,0 +1,9 @@
+.build-deps/
+build/
+dist/
+__pycache__/
+*.spec
+data/*.zip
+data/.student.zip_old
+/dashboard-preview.png
+/scatter-preview.png
