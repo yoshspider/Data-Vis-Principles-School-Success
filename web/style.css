@@ -47,3 +47,4 @@ html{scroll-snap-type:y proximity;scroll-behavior:smooth}
 .net-detail dd small{font-weight:400;color:var(--muted)}
 .net-detail dl+p,.net-detail>p:only-child{margin:0}
 @media(max-width:900px){.net-layout{grid-template-columns:1fr}.net-detail{min-height:0;margin-top:0}}
+.story-link{font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}

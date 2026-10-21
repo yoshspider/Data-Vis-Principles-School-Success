@@ -2,7 +2,7 @@
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Student Performance Explorer</title><link rel="stylesheet" href="style.css"></head>
 <body>
-<header><a href="#" class="brand">Student Performance</a><span class="eyebrow">DATA VISUALIZATION · UCI STUDENT PERFORMANCE</span><button id="export">Export filtered CSV ↗</button></header>
+<header><a href="#" class="brand">Student Performance</a><span class="eyebrow">DATA VISUALIZATION · UCI STUDENT PERFORMANCE</span><a href="story.html" class="story-link">Data story →</a><button id="export">Export filtered CSV ↗</button></header>
 <main>
 <section class="intro"><p class="eyebrow">STUDENT PERFORMANCE EXPLORER</p><h1>Understanding student achievement</h1><p class="lead">Explore how family circumstances, access and study habits relate to grades in two Portuguese schools.</p><p class="intro-note">Observational data · 1,044 course records · Grades on a 0–20 scale</p></section>
 <section class="filters" aria-label="Filter course records"><label>Subject<select id="subject"><option value="all">Both subjects</option><option>Mathematics</option><option>Portuguese</option></select></label><label>School<select id="school"><option value="all">Both schools</option><option value="GP">Gabriel Pereira</option><option value="MS">Mousinho da Silveira</option></select></label><label>Support comparison<select id="support"><option value="schoolsup">School support</option><option value="famsup">Family support</option></select></label><button id="reset">Reset filters</button><span id="filter-status" aria-live="polite"></span></section>
