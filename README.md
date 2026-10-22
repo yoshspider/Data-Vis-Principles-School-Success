@@ -32,7 +32,7 @@ GitHub Actions also builds the executable on every push to `main`. Open the repo
 2. Grouped bars: school or family support by context factor count.
 3. Two lines: mean final grade by context and behavior factor counts.
 4. Illustrative support discussion tree, annotated with group sizes and grades.
-5. Grade progression: G1, G2, G3 by home internet access.
+5. Risk-factor network (node-link diagram): nine factors (the four context and four behavior factors, plus past failure ≥1) are nodes sized by record count, each with a ring showing the share reaching G3 ≥10. Links join factor pairs whose lift (observed co-occurrence ÷ the count expected under independence) meets a slider threshold (default 1.3×, minimum 10 shared records); link width encodes lift. A hand-written force simulation places the nodes; nodes can be dragged (double-click releases them). Hovering or focusing a node or link shows its numbers, including the lift calculation, in a panel to the right of the figure. Clicking a node or link selects those records in the scatterplot matrix, and matrix selections fill each node in proportion to its selected records (two-way linked views).
 6. A 4 × 4 scatterplot matrix of absences, age, G1 and G3. Each off-diagonal cell compares a variable pair; diagonal histograms show distributions. A local cohort filter selects records with or without home internet.
 
 Filters select subject and school; export downloads the current records as CSV. Chart marks show means and sample sizes on hover or keyboard focus. Grade axes use 0–20 throughout. Missing groups are omitted rather than rendered as zero; line paths break at missing groups.
@@ -45,7 +45,7 @@ Context count (0–4): no internet, commute >30 minutes (`traveltime >= 3`), mat
 
 The decision tree is an explicit discussion aid: G1 <10 prompts learning support; otherwise no internet or commute >30 minutes prompts access support; otherwise routine check-in and support on request. It is not a fitted predictive model or allocation policy. Differences between supported and unsupported groups cannot estimate the benefit of support because support is not randomly assigned.
 
-Scatterplots use exact numeric coordinates, without jitter or interpolation. These measurements are recorded as integers, not truly continuous observations. Identical coordinate pairs are aggregated into bubbles whose area is proportional to course-record count. All matrix cells share fixed variable ranges and the same bubble scale; hover or focus reveals exact values and counts. Passing means G3 >=10 for this dashboard. Consult `data/student.txt` for original variable definitions (including the dataset's failure-code wording).
+Scatterplots use exact numeric coordinates, without jitter or interpolation. These measurements are recorded as integers, not truly continuous observations. Identical coordinate pairs are aggregated into bubbles whose area is proportional to course-record count. All matrix cells share fixed variable ranges and the same bubble scale; hover or focus reveals exact values and counts. Passing means G3 >=10 for this dashboard. Network lift for factors A and B is n(A and B) × N ÷ (n(A) × n(B)); 1× means they co-occur as often as chance. The network's past-failure node uses `failures >= 1`. Lift describes association, not causation. Consult `data/student.txt` for original variable definitions (including the dataset's failure-code wording).
 
 ## Data attribution and reproducibility
 

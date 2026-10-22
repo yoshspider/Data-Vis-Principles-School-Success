@@ -13,3 +13,37 @@ html{scroll-snap-type:y proximity;scroll-behavior:smooth}
 .dots a.active{background:var(--teal)}
 .dots a:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
 @media(max-width:900px){.dots{display:none}.grid>.card{min-height:0}}
+
+/* Risk-factor network */
+.network-chart .net-link-vis{stroke:#94a3b8;stroke-opacity:.75;stroke-linecap:round;pointer-events:none}
+.network-chart .net-link{stroke:transparent;cursor:pointer}
+.network-chart .net-edge:hover .net-link-vis,.network-chart .net-edge.is-hot .net-link-vis{stroke:var(--ink);stroke-opacity:.8}
+.network-chart .net-hit{fill:transparent;cursor:grab;touch-action:none}
+.network-chart .net-hit:active{cursor:grabbing}
+.network-chart .net-sel{fill:var(--ink);fill-opacity:.28;pointer-events:none}
+.network-chart .net-label{paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;pointer-events:none}
+.network-chart .net-node .value{pointer-events:none}
+.network-chart .net-sel-label{fill:var(--ink);font-weight:600}
+.network-chart .net-node.is-empty{opacity:.45}
+.network-chart .has-selection .net-node.is-unselected{opacity:.4}
+.network-chart .has-selection .net-link-vis{stroke-opacity:.35}
+.network-chart .net-node.is-selected .net-hit,.network-chart .net-edge.is-selected .net-link-vis{stroke:var(--ink);stroke-width:2;stroke-dasharray:4 3;stroke-opacity:1}
+.net-callout{font-size:14px;margin:0 0 4px;line-height:1.9}
+.net-callout button{font-size:12px;padding:5px 10px;margin-left:6px}
+.net-threshold{display:flex!important;align-items:center;gap:10px;font-weight:400!important;font-size:13px!important;padding-bottom:8px}
+.net-threshold input{accent-color:var(--teal);width:150px}
+.net-threshold output{font-weight:600;min-width:34px}
+.net-legend{justify-content:center;color:var(--muted);align-items:center}
+.net-legend span{display:inline-flex;align-items:center;gap:6px}
+#network-selection{font-size:12px;color:var(--muted);margin-left:auto;padding-bottom:9px}
+.net-layout{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:24px;align-items:start;max-width:1060px;width:100%;margin:0 auto 16px}
+.net-layout .network-chart{max-width:none;margin:0}
+#net-callout{max-width:1060px;width:100%;margin:0 auto}
+.net-detail{border:1px solid var(--line);border-radius:7px;padding:16px;font-size:13px;line-height:1.5;color:var(--muted);background:var(--paper);min-height:120px;margin-top:20px}
+.net-detail h4{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--ink)}
+.net-detail p{margin:10px 0 0}
+.net-detail dl{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin:0}
+.net-detail dd{margin:0;color:var(--ink);font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.net-detail dd small{font-weight:400;color:var(--muted)}
+.net-detail dl+p,.net-detail>p:only-child{margin:0}
+@media(max-width:900px){.net-layout{grid-template-columns:1fr}.net-detail{min-height:0;margin-top:0}}
