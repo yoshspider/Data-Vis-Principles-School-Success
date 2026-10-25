@@ -621,7 +621,7 @@ function selectionKeys(e){
 $('v7').addEventListener('keydown',selectionKeys);$('network').addEventListener('keydown',selectionKeys);
 function tip(event){let target=event.target.closest('[data-tip]');if(!target)return;if(target.closest('#network-chart'))return showNetDetail(target);let box=target.getBoundingClientRect(),tooltip=$('tooltip');tooltip.textContent=target.dataset.tip;tooltip.hidden=false;tooltip.style.left=Math.max(8,Math.min(window.innerWidth-270,event.clientX||box.x))+'px';tooltip.style.top=Math.max(8,Math.min(window.innerHeight-70,(event.clientY||box.y)-45))+'px';}
 document.addEventListener('pointerover',tip);document.addEventListener('focusin',tip);document.addEventListener('pointerout',()=>{$('tooltip').hidden=true;});document.addEventListener('focusout',()=>{$('tooltip').hidden=true;});
-fetch('data.json').then(r=>{if(!r.ok)throw Error('Data could not be loaded');return r.json();}).then(data=>{all=data;recordIndex=new Map(data.map((r,i)=>[r,i]));render();}).catch(e=>{$('filter-status').textContent=e.message;});
+try{all=window.SCHOOL_DATA;recordIndex=new Map(all.map((r,i)=>[r,i]));render();}catch(e){$('filter-status').textContent='Data could not be loaded';}
 
 const dotLinks=[...document.querySelectorAll('.dots a')];
 if('IntersectionObserver' in window){const view=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)dotLinks.forEach(d=>d.classList.toggle('active',d.getAttribute('href')==='#'+e.target.id));}),{rootMargin:'-40% 0px -40% 0px'});document.querySelectorAll('.grid>.card').forEach(c=>view.observe(c));}

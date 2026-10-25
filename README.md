@@ -1,6 +1,14 @@
 # School Success Explorer
 
-An offline dashboard implementing the six visualization concepts in the project presentation with the UCI Student Performance dataset.
+An offline dashboard and four-part data story built from the UCI Student Performance dataset.
+
+## Click and run
+
+Open `web/index.html` directly in any modern browser; no server, installation, or internet connection is required. Use **Data story** in the header to open the narrative view, or open `web/story.html` directly. The browser-ready `web/data.js` is generated from the same 1,044 records as `web/data.json`.
+
+For local development with clean URLs, run `python app.py --port 8765` and open `http://127.0.0.1:8765`.
+
+The submission-ready process book, including the Phase 2 implementation addendum, is at `output/pdf/school-success-process-book-phase2.pdf`.
 
 ## Run on Windows
 
@@ -32,8 +40,11 @@ GitHub Actions also builds the executable on every push to `main`. Open the repo
 2. Grouped bars: school or family support by context factor count.
 3. Two lines: mean final grade by context and behavior factor counts.
 4. Illustrative support discussion tree, annotated with group sizes and grades.
-5. Risk-factor network (node-link diagram): nine factors (the four context and four behavior factors, plus past failure ≥1) are nodes sized by record count, each with a ring showing the share reaching G3 ≥10. Links join factor pairs whose lift (observed co-occurrence ÷ the count expected under independence) meets a slider threshold (default 1.3×, minimum 10 shared records); link width encodes lift. A hand-written force simulation places the nodes; nodes can be dragged (double-click releases them). Hovering or focusing a node or link shows its numbers, including the lift calculation, in a panel to the right of the figure. Clicking a node or link selects those records in the scatterplot matrix, and matrix selections fill each node in proportion to its selected records (two-way linked views).
-6. A 4 × 4 scatterplot matrix of absences, age, G1 and G3. Each off-diagonal cell compares a variable pair; diagonal histograms show distributions. A local cohort filter selects records with or without home internet.
+5. Heatmap: the distribution of behavior-factor counts within each context-factor count.
+6. Risk-factor network (node-link diagram): nine factors (the four context and four behavior factors, plus past failure ≥1) are nodes sized by record count, each with a ring showing the share reaching G3 ≥10. Links join factor pairs whose lift (observed co-occurrence ÷ the count expected under independence) meets a slider threshold (default 1.3×, minimum 10 shared records); link width encodes lift. A hand-written force simulation places the nodes; nodes can be dragged (double-click releases them). Hovering or focusing a node or link shows its numbers, including the lift calculation, in a panel to the right of the figure. Clicking a node or link selects those records in the scatterplot matrix, and matrix selections fill each node in proportion to its selected records (two-way linked views).
+7. A 5 × 5 scatterplot matrix of past failures, study time, maternal education, workday alcohol use and final grade. Each off-diagonal cell compares a variable pair; diagonal histograms show distributions. Dragging a box or clicking a bar selects records across every cell and the linked network.
+
+The data story adds a polished family-size box plot, reuses the internet progression, staircase, decision tree and support views, and arranges them into a hook-to-solution narrative.
 
 Filters select subject and school; export downloads the current records as CSV. Chart marks show means and sample sizes on hover or keyboard focus. Grade axes use 0–20 throughout. Missing groups are omitted rather than rendered as zero; line paths break at missing groups.
 
@@ -55,4 +66,4 @@ Dataset: https://archive.ics.uci.edu/dataset/320/student+performance
 
 Data licensed CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
 
-Original `student-mat.csv`, `student-por.csv`, documentation and merge example are preserved in `data/`. `prepare_data.py` converts those originals to the bundled `web/data.json`. No synthetic observations are used.
+Original `student-mat.csv`, `student-por.csv`, documentation and merge example are preserved in `data/`. `prepare_data.py` converts those originals to the bundled `web/data.json` and click-and-run `web/data.js`. No synthetic observations are used.

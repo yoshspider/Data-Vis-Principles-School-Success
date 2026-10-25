@@ -5,11 +5,40 @@ const mean=a=>a.length?a.reduce((s,r)=>s+r.G3,0)/a.length:null;
 const context=r=>+(r.internet==='no')+ +(r.traveltime>=3)+ +(r.Medu<3)+ +(r.Fedu<3);
 const groups=(fn,n=5)=>Array.from({length:n},(_,i)=>records.filter(r=>fn(r)===i));
 const fmt=n=>n===null?'No records':n.toFixed(1);
+const quantile=(values,p)=>{const i=(values.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return values[lo]+(values[hi]-values[lo])*(i-lo);};
 function svgStart(title,ylabel='Mean grade / 20'){return `<svg viewBox="0 0 540 285" role="img" aria-label="${title}"><text x="45" y="13">${ylabel}</text>`;}
 function axes(labels,top=20,step=5){let s='';for(let y=0;y<=top;y+=step){let py=230-y*200/top;s+=`<line x1="45" y1="${py}" x2="520" y2="${py}" stroke="#e1e5dc"/><text x="34" y="${py+4}" text-anchor="end">${y}</text>`;}labels.forEach((label,i)=>s+=`<text x="${xpos(i,labels.length)}" y="252" text-anchor="middle">${label}</text>`);return s;}
 const xpos=(i,n)=>45+(i+.5)*475/n;
 function mark(tag,attrs,tip){return `<${tag} ${attrs} tabindex="0" data-tip="${tip}" aria-label="${tip}"><title>${tip}</title></${tag}>`;}
 function legend(items){return `<div class="legend">${items.map(([label,color])=>`<span><i style="background:${color}"></i>${label}</span>`).join('')}</div>`;}
+
+function familyBoxplot(){
+  const cohorts=[
+    {key:'LE3',label:'3 or fewer',color:teal},
+    {key:'GT3',label:'More than 3',color:orange}
+  ].map(group=>{
+    const values=records.filter(r=>r.famsize===group.key).map(r=>r.G3).sort((a,b)=>a-b);
+    const q1=quantile(values,.25),median=quantile(values,.5),q3=quantile(values,.75),iqr=q3-q1;
+    const low=values.find(v=>v>=q1-1.5*iqr),high=[...values].reverse().find(v=>v<=q3+1.5*iqr);
+    return {...group,values,q1,median,q3,low,high,outliers:values.filter(v=>v<low||v>high)};
+  });
+  const y=value=>292-value*11.2,centers=[245,505],boxWidth=118;
+  let svg='<svg viewBox="0 0 720 360" role="img" aria-labelledby="famsize-title famsize-desc"><title id="famsize-title">Final grade by family size</title><desc id="famsize-desc">Two box plots have the same median of 12 and the same interquartile range from 10 to 14.</desc>';
+  for(let value=0;value<=20;value+=5){const py=y(value);svg+=`<line x1="72" y1="${py}" x2="680" y2="${py}" stroke="#ded9d0"/><text x="59" y="${py+4}" text-anchor="end">${value}</text>`;}
+  svg+='<text x="72" y="20">Final grade / 20</text><line x1="72" y1="180" x2="680" y2="180" stroke="#64748b" stroke-dasharray="5 5"/><text x="676" y="173" text-anchor="end">Passing threshold · 10</text>';
+  cohorts.forEach((group,index)=>{
+    const x=centers[index],tip=`${group.label} people; median ${fmt(group.median)}; middle 50% ${fmt(group.q1)} to ${fmt(group.q3)}; n=${group.values.length}`;
+    svg+=`<g tabindex="0" data-tip="${tip}" aria-label="${tip}"><title>${tip}</title>`;
+    svg+=`<line x1="${x}" y1="${y(group.high)}" x2="${x}" y2="${y(group.low)}" stroke="${group.color}" stroke-width="3"/><line x1="${x-28}" y1="${y(group.high)}" x2="${x+28}" y2="${y(group.high)}" stroke="${group.color}" stroke-width="3"/><line x1="${x-28}" y1="${y(group.low)}" x2="${x+28}" y2="${y(group.low)}" stroke="${group.color}" stroke-width="3"/>`;
+    svg+=`<rect x="${x-boxWidth/2}" y="${y(group.q3)}" width="${boxWidth}" height="${y(group.q1)-y(group.q3)}" rx="8" fill="${group.color}" fill-opacity=".18" stroke="${group.color}" stroke-width="3"/><line x1="${x-boxWidth/2}" y1="${y(group.median)}" x2="${x+boxWidth/2}" y2="${y(group.median)}" stroke="${group.color}" stroke-width="4"/>`;
+    svg+=`<text class="median-label" x="${x+boxWidth/2+10}" y="${y(group.median)+4}">12</text>`;
+    group.outliers.forEach((value,outlierIndex)=>{const offset=(outlierIndex-(group.outliers.length-1)/2)*5;svg+=`<circle cx="${x+offset}" cy="${y(value)}" r="3.5" fill="${group.color}" fill-opacity=".62"/>`;});
+    svg+='</g>';
+    svg+=`<text class="box-label" x="${x}" y="326" text-anchor="middle">${group.label}</text><text class="box-sublabel" x="${x}" y="343" text-anchor="middle">people in household · n=${group.values.length}</text>`;
+  });
+  svg+='<path d="M245 71 V50 H505 V71" fill="none" stroke="#172b4d" stroke-width="1.5"/><text class="annotation" x="375" y="42" text-anchor="middle">The boxes align exactly</text></svg>';
+  $('famsize-box').innerHTML=legend(cohorts.map(group=>[group.label+' people',group.color]))+svg;
+}
 
 function staircase(){
   const cohorts=groups(r=>r.failures,4), width=475/4;
@@ -85,6 +114,7 @@ function statBand(){
 }
 
 function render(){
+  familyBoxplot();
   staircase();
   statBand();
   percentBars('support-chart',['0','1','2','3','4'],[
@@ -112,4 +142,4 @@ document.addEventListener('focusin',tip);
 document.addEventListener('pointerout',()=>{$('tooltip').hidden=true;});
 document.addEventListener('focusout',()=>{$('tooltip').hidden=true;});
 
-fetch('data.json').then(r=>{if(!r.ok)throw Error('Data could not be loaded');return r.json();}).then(data=>{records=data.filter(r=>r.subject==='Portuguese');render();}).catch(e=>{document.querySelector('.intro-note').textContent=e.message;});
+try{records=window.SCHOOL_DATA.filter(r=>r.subject==='Portuguese');render();}catch(e){document.querySelector('.intro-note').textContent='Data could not be loaded';}

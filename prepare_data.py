@@ -10,5 +10,7 @@ for subject, filename in [('Mathematics', 'student-mat.csv'), ('Portuguese', 'st
         for row in csv.DictReader(stream, delimiter=';'):
             row = {key: int(value) if value.isdigit() else value for key, value in row.items()}
             rows.append(dict(row, subject=subject))
-(ROOT / 'web' / 'data.json').write_text(json.dumps(rows, separators=(',', ':')), encoding='utf-8')
+payload = json.dumps(rows, separators=(',', ':'))
+(ROOT / 'web' / 'data.json').write_text(payload, encoding='utf-8')
+(ROOT / 'web' / 'data.js').write_text(f'window.SCHOOL_DATA={payload};\n', encoding='utf-8')
 print(f'Prepared {len(rows)} course records.')

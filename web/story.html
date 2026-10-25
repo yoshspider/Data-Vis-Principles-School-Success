@@ -4,28 +4,37 @@
 <body class="story">
 <header><a href="index.html" class="brand">Student Performance</a><span class="eyebrow">DATA VISUALIZATION · UCI STUDENT PERFORMANCE</span><a href="index.html">Explorer ↗</a></header>
 <main>
-<section class="intro"><p class="eyebrow">DATA STORY</p><h1>From familiar assumptions to a concrete group</h1><p class="lead">Four sections trace how the evidence narrows from weak demographic signals to past academic history.</p><p class="intro-note">Portuguese language course · 649 course records · Grades on a 0–20 scale</p></section>
+<section class="cover">
+<p class="eyebrow">CS 6730 · DATA VISUALIZATION · FALL 2026</p>
+<h1>From familiar assumptions<br> to a concrete group</h1>
+<p class="lead">Four sections trace how the evidence narrows from weak demographic signals to past academic history.</p>
+<p class="byline">Yash Agrawal · Justin Bimal · Joshua Blackmon · Oluwatimi Omoteso · Abdulaziz Alajlan</p>
+<p class="intro-note">Portuguese language course · 649 course records · Grades on a 0–20 scale</p>
+<a class="scroll-cue" href="#hook">Scroll to begin <span aria-hidden="true">↓</span></a>
+</section>
 
-<section class="story-section" id="hook">
+<section class="story-section" id="hook" data-num="01">
 <p class="eyebrow">01 / HOOK</p>
 <h2>Familiar factors do not identify risk</h2>
 <p class="section-summary">Three common assumptions about attendance, family size and paid classes fail to separate students by achievement.</p>
-<p class="section-body">Nursery attendance has a negligible relationship with grades (Joshua), family-size groups have identical medians and middle-50% ranges (Abdulaziz), and paid classes show no meaningful grade advantage (Timi). These non-results challenge the assumption that familiar demographic or financial factors automatically identify the students at most risk.</p>
+<p class="section-body">Nursery attendance has a negligible relationship with grades, family-size groups have identical medians and middle-50% ranges, and paid classes show no meaningful grade advantage. These non-results challenge the assumption that familiar demographic or financial factors automatically identify the students at most risk.</p>
 <div class="story-grid single">
-<article class="card placeholder-card">
-<p class="eyebrow">VISUALIZATION PLACEHOLDER</p>
-<h3>Demographic and financial factors</h3>
-<p>One chart still needed here: nursery attendance versus grades, family-size medians and middle-50% ranges, and paid classes versus grades.</p>
-<span class="placeholder-tag">Placeholder · awaiting chart</span>
+<article class="card hook-card">
+<p class="eyebrow">FAMILY SIZE · FINAL GRADE</p>
+<h3>Different household sizes, the same middle</h3>
+<p>Final-grade distributions for households of three or fewer people and households of more than three.</p>
+<div id="famsize-box" class="chart boxplot"></div>
+<p class="chart-takeaway"><strong>Same median: 12</strong><span>Same middle 50%: 10–14</span></p>
+<p class="note">Boxes show the middle 50%; center lines mark medians; whiskers extend to the most distant values within 1.5 × IQR. Zero grades are retained. Portuguese course records, n=649.</p>
 </article>
 </div>
 </section>
 
-<section class="story-section" id="rising">
+<section class="story-section" id="rising" data-num="02">
 <p class="eyebrow">02 / RISING INSIGHTS</p>
 <h2>Goals, access and home context matter more</h2>
 <p class="section-summary">Three indicators show clearer separation, shifting attention from broad demographics toward student circumstances.</p>
-<p class="section-body">Students planning to pursue higher education have higher grades (Timi), students with home internet have a roughly one-point median advantage (Justin), and students with a non-parent guardian show a noticeable grade drop (Joshua). These findings narrow the story from broad assumptions to indicators connected with student goals, access, and home context.</p>
+<p class="section-body">Students planning to pursue higher education have higher grades, students with home internet have a roughly one-point median advantage, and students with a non-parent guardian show a noticeable grade drop. These findings narrow the story from broad assumptions to indicators connected with student goals, access, and home context.</p>
 <div class="story-grid rising">
 <article class="card wide-card">
 <p class="eyebrow">HOME INTERNET</p>
@@ -37,7 +46,7 @@
 </div>
 </section>
 
-<section class="story-section" id="main-message">
+<section class="story-section" id="main-message" data-num="03">
 <p class="eyebrow">03 / MAIN MESSAGE</p>
 <h2>Past failure marks a concrete group for attention</h2>
 <p class="section-summary">Students with any recorded past failure are far more likely to fall below the passing threshold.</p>
@@ -52,7 +61,7 @@
 </article>
 </section>
 
-<section class="story-section" id="solution">
+<section class="story-section" id="solution" data-num="04">
 <p class="eyebrow">04 / SOLUTION</p>
 <h2>Start with prior-failure records</h2>
 <p class="section-summary">The recommendation uses existing records to target outreach, then tests whether the support actually helps.</p>
@@ -76,4 +85,4 @@
 </section>
 
 <footer><span>Source: <a href="https://archive.ics.uci.edu/dataset/320/student+performance" target="_blank" rel="noreferrer">Cortez (2008), UCI Student Performance</a> · CC BY 4.0</span><span>Runs locally · No external scripts or fonts</span></footer>
-</main><div id="tooltip" role="status" hidden></div><script src="story.js"></script></body></html>
+</main><div id="tooltip" role="status" hidden></div><script src="data.js"></script><script src="story.js"></script></body></html>
