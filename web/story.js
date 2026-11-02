@@ -100,11 +100,7 @@ function lines(id,labels,series,title,xlabel){
 }
 
 function tree(){
-  const low=records.filter(r=>r.G1<10), other=records.filter(r=>r.G1>=10),
-    access=other.filter(r=>r.internet==='no'||r.traveltime>=3),
-    rest=other.filter(r=>r.internet==='yes'&&r.traveltime<3);
-  const node=(label,a,leaf=false)=>`<div class="tree-node ${leaf?'tree-leaf':''}">${label}<br><small>n=${a.length} · final mean ${fmt(mean(a))}</small></div>`;
-  $('tree').innerHTML=node('First-period grade below 10?',records)+`<div class="tree-path"><div class="tree-branch"><small>↓ Yes</small>${node('Discuss learning support and barriers',low,true)}</div><div class="tree-branch"><small>↓ No</small>${node('No internet or commute above 30 min?',other)}<div class="tree-path"><div class="tree-branch"><small>↓ Yes</small>${node('Discuss access support',access,true)}</div><div class="tree-branch"><small>↓ No</small>${node('Check in; support on request',rest,true)}</div></div></div></div>`;
+  drawSupportTree($('tree'),records);
 }
 
 function statBand(){

@@ -43,14 +43,11 @@ body.story{--story-paper:#f4f0e8;--story-surface:#fffdf8;--story-line:#d8d1c5;ba
 .story #failures{max-width:760px;margin:0 auto 8px}
 .story #internet{max-width:100%;margin:0 auto 8px}
 .story #support-chart{max-width:100%}
-.story .tree{max-width:640px;margin:0 auto}
-.story .tree-node{background:#eaf1f7;border-color:#b9cde0}
-.story .tree-leaf{background:#f8f5ef;border-color:var(--story-line)}
 .story .dots{display:none}
 .story-grid.rising{grid-template-columns:1fr 1fr}
 .story-grid .wide-card{grid-column:1/-1}
 .story-grid.solution{grid-template-columns:1fr}
-.story-grid.solution>.card>.chart,.story-grid.solution>.card>.tree{max-width:760px;width:100%;margin-left:auto;margin-right:auto}
+.story-grid.solution>.card>.chart{max-width:760px;width:100%;margin-left:auto;margin-right:auto}
 .story-grid.single{grid-template-columns:1fr}
 .story footer{border-color:var(--story-line)}
 @media(max-width:1000px){.story-grid{grid-template-columns:1fr 1fr}}

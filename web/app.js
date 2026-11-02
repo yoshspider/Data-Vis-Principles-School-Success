@@ -2,7 +2,7 @@
 const $=id=>document.getElementById(id), teal='#2563a6', orange='#c46743';
 let all=[], records=[];
 const mean=a=>a.length?a.reduce((s,r)=>s+r.G3,0)/a.length:null;
-// The context and behavior counts are sums of these factors; the network chart draws them as nodes.
+// The context and behavior counts are sums of these factors; the chord diagram draws them as arcs.
 const FACTORS = [
   {key: 'noNet', label: 'No home internet', group: 'context', test: r => r.internet === 'no'},
   {key: 'commute', label: 'Commute >30 min', group: 'context', test: r => r.traveltime >= 3},
@@ -88,15 +88,15 @@ function behaviorByContext(){
   $('behavior-context').innerHTML=`<div class="legend"><span>Share of records in each column</span><span style="display:inline-flex;align-items:center;gap:6px">0%<i style="width:110px;height:10px;border-radius:2px;margin:0;background:linear-gradient(to right,rgba(37,99,166,.06),${teal})"></i>100%</span></div>`+s;
 }
 function lines(id,labels,series,title,xlabel){let s=svgStart(title)+axes(labels);series.forEach(ser=>{let path='',previous=false;ser.values.forEach((a,i)=>{let m=a.length?a.reduce((sum,r)=>sum+r[ser.grade||'G3'],0)/a.length:null;if(m===null){previous=false;return;}path+=`${previous?'L':'M'}${xpos(i,labels.length)},${230-m*10} `;previous=true;});s+=`<path d="${path}" fill="none" stroke="${ser.color}" stroke-width="3"/>`;ser.values.forEach((a,i)=>{if(!a.length)return;let m=a.reduce((sum,r)=>sum+r[ser.grade||'G3'],0)/a.length;s+=mark('circle',`cx="${xpos(i,labels.length)}" cy="${230-m*10}" r="5" fill="${ser.color}"`,`${ser.name}, ${labels[i]}: ${fmt(m)}/20; n=${a.length}`);});});$(id).innerHTML=legend(series.map(s=>[s.name,s.color]))+s+`<text x="282" y="276" text-anchor="middle">${xlabel}</text></svg>`;}
-function tree(){let low=records.filter(r=>r.G1<10),other=records.filter(r=>r.G1>=10),access=other.filter(r=>r.internet==='no'||r.traveltime>=3),rest=other.filter(r=>r.internet==='yes'&&r.traveltime<3);let node=(label,a,leaf=false)=>`<div class="tree-node ${leaf?'tree-leaf':''}">${label}<br><small>n=${a.length} · final mean ${fmt(mean(a))}</small></div>`;$('tree').innerHTML=node('First-period grade below 10?',records)+`<div class="tree-path"><div class="tree-branch"><small>↓ Yes</small>${node('Discuss learning support and barriers',low,true)}</div><div class="tree-branch"><small>↓ No</small>${node('No internet or commute above 30 min?',other)}<div class="tree-path"><div class="tree-branch"><small>↓ Yes</small>${node('Discuss access support',access,true)}</div><div class="tree-branch"><small>↓ No</small>${node('Check in; support on request',rest,true)}</div></div></div></div>`;}
+function tree(){drawSupportTree($('tree'),records);}
+// Three behaviors a school can act on; final grade is shown by colour rather than as an axis.
+// Absences has a long tail (99% of records ≤26, max 75), so values above `cap` share one "30+" band.
 const measures = {
-  failures: {label: 'Past class failures', short: 'Past failures', min: 0, max: 3, ticks: [0, 1, 2, 3]},
   studytime: {label: 'Weekly study time (1 <2 h, 2 2–5 h, 3 5–10 h, 4 >10 h)', short: 'Study time (1–4)', min: 1, max: 4, ticks: [1, 2, 3, 4]},
-  Medu: {label: "Mother's education (0 none to 4 higher)", short: "Mother's education (0–4)", min: 0, max: 4, ticks: [0, 1, 2, 3, 4]},
   Dalc: {label: 'Workday alcohol (1 very low to 5 very high)', short: 'Workday alcohol (1–5)', min: 1, max: 5, ticks: [1, 2, 3, 4, 5]},
-  G3: {label: 'Final grade (G3)', short: 'Final grade (G3)', min: 0, max: 20, ticks: [0, 5, 10, 15, 20]}
+  absences: {label: 'School absences (days)', short: 'Absences (days)', min: 0, max: 30, cap: 30, ticks: [0, 10, 20, 30]}
 };
-const matrixVariables = ['failures', 'studytime', 'Medu', 'Dalc', 'G3'];
+const matrixVariables = ['studytime', 'Dalc', 'absences'];
 const CELL = 200, OFFSET = 54, PAD = 23, SPAN = 154, BAR_HEIGHT = 115, JITTER = .7, MIN_DRAG = 3, PASS_GRADE = 10;
 let recordIndex = new Map(), matrixRows = [], matrixBrushes = [], brushDrag = null, selectionFrame = 0;
 
@@ -114,7 +114,10 @@ function jitter(r, key) {
   h ^= h >>> 16;
   return ((h >>> 0) / 4294967296 - .5) * JITTER;
 }
-const jittered = (r, key) => r[key] + jitter(r, key);
+// The value a record is plotted at: its own value, or the cap for anything above it.
+const valueOf = (r, key) => measures[key].cap === undefined ? r[key] : Math.min(r[key], measures[key].cap);
+const tickLabel = (m, v) => v === m.cap ? `${v}+` : `${v}`;
+const jittered = (r, key) => valueOf(r, key) + jitter(r, key);
 
 // Colour always means the final grade: blue reached 10/20, orange fell below it.
 const gradeColor = r => r.G3 >= PASS_GRADE ? teal : orange;
@@ -127,7 +130,7 @@ function dots(rows, xKey, yKey) {
 function valueCounts(rows, key) {
   const m = measures[key];
   const counts = Array.from({length: m.max - m.min + 1}, () => 0);
-  rows.forEach(r => counts[r[key] - m.min]++);
+  rows.forEach(r => counts[valueOf(r, key) - m.min]++);
   return counts;
 }
 
@@ -149,19 +152,10 @@ function histogram(key, rows) {
   let svg = '<text x="100" y="18" text-anchor="middle" class="distribution-label">Distribution · click a bar</text>';
   svg += `<g class="base" fill-opacity=".8">${stackedBars(rows, key, max)}</g><g class="sel-bars" data-key="${key}" data-max="${max}"></g>`;
   counts.forEach((n, i) => {
-    const value = m.min + i, passed = rows.filter(r => r[key] === value && r.G3 >= PASS_GRADE).length;
+    const value = m.min + i, passed = rows.filter(r => valueOf(r, key) === value && r.G3 >= PASS_GRADE).length;
     const share = n ? ` (${(100 * passed / n).toFixed(0)}%)` : '';
-    svg += mark('rect', `x="${px(value) - band / 2}" y="${PAD}" width="${band}" height="${SPAN}" data-key="${key}" data-value="${value}" class="bar"`, `${m.label}: ${value}; ${n} course records, ${passed} with final grade ≥10${share}. Click or press Enter to select them.`);
+    svg += mark('rect', `x="${px(value) - band / 2}" y="${PAD}" width="${band}" height="${SPAN}" data-key="${key}" data-value="${value}" class="bar"`, `${m.label}: ${tickLabel(m, value)}; ${n} course records, ${passed} with final grade ≥10${share}. Click or press Enter to select them.`);
   });
-  return svg;
-}
-
-// Dashed line between 9 and 10 wherever the final grade is on an axis.
-function passLine(xKey, yKey) {
-  const line = (x1, y1, x2, y2) => `<line class="pass-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
-  let svg = '';
-  if (xKey === 'G3') svg += line(scaleX(measures.G3)(PASS_GRADE - .5), PAD, scaleX(measures.G3)(PASS_GRADE - .5), PAD + SPAN);
-  if (yKey === 'G3' && xKey !== 'G3') svg += line(PAD, scaleY(measures.G3)(PASS_GRADE - .5), PAD + SPAN, scaleY(measures.G3)(PASS_GRADE - .5));
   return svg;
 }
 
@@ -170,23 +164,27 @@ function matrixCell(xKey, yKey, rows) {
   const ticks = m => m.ticks;
   let svg = '';
   if (xKey === yKey) {
-    svg += histogram(xKey, rows) + passLine(xKey, yKey);
+    svg += histogram(xKey, rows);
   } else {
     ticks(y).forEach(v => svg += `<line x1="${PAD}" x2="${PAD + SPAN}" y1="${py(v)}" y2="${py(v)}" stroke="#f1f5f9"/>`);
     ticks(x).forEach(v => svg += `<line y1="${PAD}" y2="${PAD + SPAN}" x1="${px(v)}" x2="${px(v)}" stroke="#f1f5f9"/>`);
-    svg += `<g class="base" fill-opacity=".45">${dots(rows, xKey, yKey)}</g><g class="sel" fill-opacity=".9"></g>${passLine(xKey, yKey)}`;
+    svg += `<g class="base" fill-opacity=".45">${dots(rows, xKey, yKey)}</g><g class="sel" fill-opacity=".9"></g>`;
     svg += `<g class="brushes"></g><rect class="brush-area" x="${PAD}" y="${PAD}" width="${SPAN}" height="${SPAN}"/>`;
-    ticks(y).forEach(v => svg += `<text x="18" y="${py(v) + 3}" text-anchor="end">${v}</text>`);
+    ticks(y).forEach(v => svg += `<text x="20" y="${py(v) + 3}" text-anchor="end">${tickLabel(y, v)}</text>`);
     if (!rows.length) svg += `<text x="${CELL / 2}" y="${CELL / 2}" text-anchor="middle">No records</text>`;
   }
-  ticks(x).forEach(v => svg += `<text x="${px(v)}" y="${PAD + SPAN + 14}" text-anchor="middle">${v}</text>`);
+  ticks(x).forEach(v => svg += `<text x="${px(v)}" y="${PAD + SPAN + 14}" text-anchor="middle">${tickLabel(x, v)}</text>`);
   return svg;
 }
 
+// "Only failed grades" narrows the matrix (and the selections made from it) to final grades below 10.
+const isFailedOnly = () => $('matrix-failed').checked;
+const matrixNoun = () => isFailedOnly() ? 'failed course records' : 'course records';
+
 function matrix() {
-  matrixRows = records;
+  matrixRows = isFailedOnly() ? records.filter(r => r.G3 < PASS_GRADE) : records;
   const size = OFFSET + matrixVariables.length * CELL;
-  let svg = `<svg viewBox="0 0 ${size} ${size}" role="img" aria-label="Scatterplot matrix of past failures, study time, mother's education, workday alcohol and final grade"><title>Rows give vertical variables; columns give horizontal variables. Diagonal cells show distributions.</title>`;
+  let svg = `<svg viewBox="0 0 ${size} ${size}" role="img" aria-label="Scatterplot matrix of study time, workday alcohol and absences, coloured by final grade"><title>Rows give vertical variables; columns give horizontal variables. Diagonal cells show distributions.</title>`;
   matrixVariables.forEach((key, i) => {
     const center = OFFSET + i * CELL + CELL / 2;
     svg += `<text x="${center}" y="26" text-anchor="middle" class="matrix-label">${measures[key].short}</text><text transform="translate(16,${center}) rotate(-90)" text-anchor="middle" class="matrix-label">${measures[key].short}</text>`;
@@ -201,7 +199,7 @@ function matrix() {
 
 // A record is selected when it falls inside any box, bar, factor or factor pair in the list (union).
 const inBrush = (r, b) => {
-  if (b.type === 'bar') return r[b.key] === b.value;
+  if (b.type === 'bar') return valueOf(r, b.key) === b.value;
   if (b.type === 'factor') return factorByKey[b.key].test(r);
   if (b.type === 'pair') return factorByKey[b.a].test(r) && factorByKey[b.b].test(r);
   const x = jittered(r, b.xKey), y = jittered(r, b.yKey);
@@ -245,8 +243,8 @@ function updateMatrixSelection() {
   const pass = selected.filter(r => r.G3 >= PASS_GRADE).length;
   const parts = matrixBrushes.length > 1 ? ` in ${matrixBrushes.length} selections` : '';
   const summary = `${selected.length.toLocaleString()} of ${total} selected${parts} · mean final grade ${fmt(mean(selected))} · ${selected.length ? (100 * pass / selected.length).toFixed(0) + '% ≥10' : '—'}`;
-  $('matrix-selection').textContent = hasSelection ? summary : `${total} course records · drag a box in any cell or click a bar to select`;
-  $('network-selection').textContent = hasSelection ? summary : `${total} course records · click a factor or link to select`;
+  $('matrix-selection').textContent = hasSelection ? summary : `${total} ${matrixNoun()} · drag a box in any cell or click a bar to select`;
+  $('network-selection').textContent = hasSelection ? summary : `${total} ${matrixNoun()} · click an arc or ribbon to select`;
 }
 
 function scheduleSelectionUpdate() {
@@ -308,15 +306,24 @@ function toggleBrush(brush, event) {
 
 const selectBar = (bar, event) => toggleBrush({type: 'bar', key: bar.dataset.key, value: +bar.dataset.value}, event);
 
-// Risk-factor network: each factor is a node; a link joins two factors that occur
-// together in more course records than independence would predict (lift = observed / expected).
+// Risk-factor chord diagram: each factor owns an arc on a circle; a ribbon joins two factors that
+// occur together in more course records than independence would predict (lift = observed / expected).
 const round = v => +v.toFixed(1);
-const NET_W = 720, NET_H = 470, NET_MIN_PAIR = 10, NET_REPEL = 9000, NET_SPRING = 190, NET_STIFF = .02;
-const NET_GRAVITY = .006, NET_DECAY = .55, NET_COOL = .965, NET_ALPHA_MIN = .02, NET_DRAG_MIN = 3, NET_PAD = 6;
-const NET_CHAR = 6.3, NET_LABEL_BELOW = 34;
-const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NET_W = 920, NET_H = 620, NET_CX = 460, NET_CY = 310, NET_R_IN = 205, NET_BAND_MIN = 6, NET_BAND_MAX = 30;
+const NET_GROUP_GAP = .2, NET_ARC_PAD = .035, NET_SLOT_INSET = .03, NET_FULL_ARC_WEIGHT = 3;
+const NET_MIN_PAIR = 10, NET_SEL_GAP = 2, NET_SEL_TRACK = 5, NET_LABEL_GAP = 14, NET_LINE = 15, NET_MAX_TIES = 4;
+const NET_LABEL_R = NET_R_IN + NET_BAND_MAX + NET_SEL_GAP + NET_SEL_TRACK + NET_LABEL_GAP;
+// Ribbons between two groups are pulled toward each group's anchor inside the circle, so ties
+// between the same pair of groups travel together as one bundle.
+const NET_BUNDLE_R = .4, NET_BUNDLE_PULL = .9;
+// Ribbon colour runs light to dark violet from 1× to NET_LIFT_DARK× (blue and orange already mean pass / fail).
+const NET_LIFT_DARK = 3, NET_LIFT_LIGHT_RGB = [214, 209, 245], NET_LIFT_DARK_RGB = [59, 44, 158];
+// Ribbon width follows lift above chance, plus a floor so the weakest ties stay visible.
+const NET_WEIGHT_FLOOR = .15;
+// Arcs run clockwise from the top: behavior down the right, school history at the bottom, context up the left.
+const NET_GROUP_ORDER = ['behavior', 'history', 'context'];
 const factorByKey = Object.fromEntries(FACTORS.map(f => [f.key, f]));
-let netSim = null, netFrame = 0, netDrag = null, netPositions = {};
+let netView = null;
 
 const passShare = rows => rows.length ? rows.filter(r => r.G3 >= PASS_GRADE).length / rows.length : 0;
 const pct = share => (100 * share).toFixed(0) + '%';
@@ -334,175 +341,176 @@ function factorStats(rows) {
   return {nodes, pairs, total: rows.length, pass: passShare(rows)};
 }
 
-// Area is proportional to records. Each node also owns a box around its circle and the two label
-// lines under it, so collisions keep labels apart as well as circles.
-const nodeRadius = (n, total) => total ? Math.max(9, 62 * Math.sqrt(n / total)) : 9;
-const nodeBox = (label, r) => ({hw: Math.max(r, label.length * NET_CHAR / 2) + NET_PAD, top: r + NET_PAD, bottom: r + NET_LABEL_BELOW});
-
-// Context factors start on the left, behavior on the right, school history below, so the layout is repeatable.
-function initialPosition(f) {
-  const peers = FACTORS.filter(g => g.group === f.group), index = peers.indexOf(f);
-  const x = {context: .27, behavior: .73, history: .5}[f.group] * NET_W + (index % 2 ? 36 : -36);
-  const y = f.group === 'history' ? NET_H * .82 : NET_H * (.16 + .22 * index);
-  return {x, y, pinned: false};
-}
-
-const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-
-// Overlapping boxes are pushed apart along the axis that overlaps least; a pinned node stays put.
-function resolveOverlaps(nodes) {
-  const xs = nodes.map(n => n.x), ys = nodes.map(n => n.y);
-  nodes.forEach((a, i) => nodes.slice(i + 1).forEach((b, k) => {
-    const j = i + 1 + k, dx = xs[j] - xs[i], dy = ys[j] - ys[i];
-    const overlapX = a.hw + b.hw - Math.abs(dx);
-    const overlapY = dy >= 0 ? a.bottom + b.top - dy : b.bottom + a.top + dy;
-    if (overlapX <= 0 || overlapY <= 0) return;
-    const [shareA, shareB] = a.pinned ? [0, 1] : b.pinned ? [1, 0] : [.5, .5];
-    if (overlapX < overlapY) {
-      const sx = Math.sign(dx) || 1;
-      xs[i] -= sx * overlapX * shareA; xs[j] += sx * overlapX * shareB;
-    } else {
-      const sy = Math.sign(dy) || 1;
-      ys[i] -= sy * overlapY * shareA; ys[j] += sy * overlapY * shareB;
-    }
-  }));
-  return nodes.map((n, i) => ({...n, x: clamp(xs[i], n.hw, NET_W - n.hw), y: clamp(ys[i], n.top, NET_H - n.bottom)}));
-}
-
-// One step of the simulation: repulsion between every pair, springs along links, weak gravity
-// to the centre, then overlap removal. Returns new node objects.
-function forceTick(nodes, links, alpha) {
-  const fx = nodes.map(() => 0), fy = nodes.map(() => 0);
-  const push = (i, dx, dy, f) => { fx[i] += dx * f; fy[i] += dy * f; };
-  nodes.forEach((a, i) => nodes.slice(i + 1).forEach((b, k) => {
-    const j = i + 1 + k, dx = b.x - a.x || .01, dy = b.y - a.y, dist = Math.hypot(dx, dy);
-    const f = NET_REPEL / (dist * dist);
-    push(i, -dx / dist, -dy / dist, f);
-    push(j, dx / dist, dy / dist, f);
-  }));
-  links.forEach(l => {
-    const a = nodes[l.a], b = nodes[l.b], dx = b.x - a.x, dy = b.y - a.y, dist = Math.hypot(dx, dy) || .01;
-    const f = (dist - (a.r + b.r + NET_SPRING / l.lift)) * NET_STIFF;
-    push(l.a, dx / dist, dy / dist, f);
-    push(l.b, -dx / dist, -dy / dist, f);
-  });
-  const moved = nodes.map((n, i) => {
-    if (n.pinned) return {...n, vx: 0, vy: 0};
-    const vx = (n.vx + (fx[i] + (NET_W / 2 - n.x) * NET_GRAVITY) * alpha) * NET_DECAY;
-    const vy = (n.vy + (fy[i] + (NET_H / 2 - n.y) * NET_GRAVITY) * alpha) * NET_DECAY;
-    return {...n, vx, vy, x: n.x + vx, y: n.y + vy};
-  });
-  return [1, 2, 3].reduce(resolveOverlaps, moved);
-}
-
-function applyNetworkPositions() {
-  const svg = $('network-chart').querySelector('svg');
-  if (!svg || !netSim) return;
-  netSim.nodes.forEach(n => netPositions[n.key] = {x: n.x, y: n.y, pinned: n.pinned});
-  svg.querySelectorAll('.net-node').forEach(g => {
-    const n = netSim.nodes[+g.dataset.index];
-    g.setAttribute('transform', `translate(${round(n.x)},${round(n.y)})`);
-  });
-  svg.querySelectorAll('.net-edge line').forEach(line => {
-    const a = netSim.nodes[+line.dataset.ai], b = netSim.nodes[+line.dataset.bi];
-    line.setAttribute('x1', round(a.x)); line.setAttribute('y1', round(a.y));
-    line.setAttribute('x2', round(b.x)); line.setAttribute('y2', round(b.y));
+// Every factor gets the same arc length, so the layout never shifts when filters change.
+// Factors in one group sit close together; wider gaps separate the groups.
+function chordArcs() {
+  const order = NET_GROUP_ORDER.flatMap(g => FACTORS.map((f, i) => i).filter(i => FACTORS[i].group === g));
+  const span = (2 * Math.PI - NET_GROUP_ORDER.length * NET_GROUP_GAP - (FACTORS.length - NET_GROUP_ORDER.length) * NET_ARC_PAD) / FACTORS.length;
+  const starts = order.reduce((acc, i, k) => {
+    const gap = k === 0 ? NET_GROUP_GAP / 2 : FACTORS[order[k - 1]].group === FACTORS[i].group ? NET_ARC_PAD : NET_GROUP_GAP;
+    const start = (k === 0 ? 0 : acc[k - 1].end) + gap;
+    return [...acc, {i, start, end: start + span}];
+  }, []);
+  return FACTORS.map((f, i) => {
+    const {start, end} = starts.find(s => s.i === i);
+    return {start, end, mid: (start + end) / 2};
   });
 }
+const NET_ARCS = chordArcs();
 
-function stepNetwork() {
-  netFrame = 0;
-  netSim = {...netSim, nodes: forceTick(netSim.nodes, netSim.links, netSim.alpha), alpha: netSim.alpha * NET_COOL};
-  applyNetworkPositions();
-  if (netSim.alpha > NET_ALPHA_MIN || netDrag) netFrame = requestAnimationFrame(stepNetwork);
+// Angles are measured clockwise from twelve o'clock.
+const polar = (r, a) => [round(NET_CX + r * Math.sin(a)), round(NET_CY - r * Math.cos(a))];
+const pt = (r, a) => polar(r, a).join(',');
+
+const groupMid = group => {
+  const mids = NET_ARCS.filter((arc, i) => FACTORS[i].group === group).map(arc => arc.mid);
+  return mids.reduce((s, m) => s + m, 0) / mids.length;
+};
+const NET_ANCHORS = Object.fromEntries(NET_GROUP_ORDER.map(g => [g, polar(NET_R_IN * NET_BUNDLE_R, groupMid(g))]));
+
+function sectorPath(r0, r1, a0, a1) {
+  if (a1 - a0 <= 0) return '';
+  const large = a1 - a0 > Math.PI ? 1 : 0;
+  return `M${pt(r1, a0)}A${r1},${r1} 0 ${large} 1 ${pt(r1, a1)}L${pt(r0, a1)}A${r0},${r0} 0 ${large} 0 ${pt(r0, a0)}Z`;
 }
 
-function heatNetwork(alpha) {
-  netSim = {...netSim, alpha: Math.max(netSim.alpha, alpha)};
-  if (!reduceMotion) {
-    if (!netFrame) netFrame = requestAnimationFrame(stepNetwork);
-    return;
-  }
-  // Reduced motion: settle instantly and draw only the final layout.
-  while (netSim.alpha > NET_ALPHA_MIN) netSim = {...netSim, nodes: forceTick(netSim.nodes, netSim.links, netSim.alpha), alpha: netSim.alpha * NET_COOL};
-  applyNetworkPositions();
+// Each side of a ribbon is a cubic curve whose control points lean toward the two group anchors.
+function ribbonPath(link) {
+  const r = NET_R_IN, [a0, a1] = link.endA, [b0, b1] = link.endB;
+  const [ancA, ancB] = [NET_ANCHORS[FACTORS[link.a].group], NET_ANCHORS[FACTORS[link.b].group]];
+  const ctrl = (angle, [ax, ay]) => {
+    const [x, y] = polar(r, angle);
+    return `${round(x + (ax - x) * NET_BUNDLE_PULL)},${round(y + (ay - y) * NET_BUNDLE_PULL)}`;
+  };
+  return `M${pt(r, a0)}A${r},${r} 0 0 1 ${pt(r, a1)}C${ctrl(a1, ancA)} ${ctrl(b0, ancB)} ${pt(r, b0)}`
+    + `A${r},${r} 0 0 1 ${pt(r, b1)}C${ctrl(b1, ancB)} ${ctrl(a0, ancA)} ${pt(r, a0)}Z`;
+}
+
+const linkWeight = l => l.lift - 1 + NET_WEIGHT_FLOOR;
+
+function liftColor(lift) {
+  const t = Math.max(0, Math.min(1, (lift - 1) / (NET_LIFT_DARK - 1)));
+  const [r, g, b] = NET_LIFT_LIGHT_RGB.map((c, k) => Math.round(c + (NET_LIFT_DARK_RGB[k] - c) * t));
+  return `rgb(${r},${g},${b})`;
+}
+
+// Each ribbon end takes a slot on its factor's arc whose width follows linkWeight, with one scale
+// for the whole chart so both ends of a ribbon match. Slots are ordered by where the partner sits
+// on the circle, which keeps ribbons from twisting over each other near the arcs.
+function ribbonSlots(links) {
+  const usable = NET_ARCS[0].end - NET_ARCS[0].start - 2 * NET_SLOT_INSET;
+  const touching = i => links.map((l, li) => ({l, li})).filter(({l}) => l.a === i || l.b === i);
+  const totals = FACTORS.map((f, i) => touching(i).reduce((s, {l}) => s + linkWeight(l), 0));
+  const unit = Math.min(usable / Math.max(...totals, 1e-9), usable / NET_FULL_ARC_WEIGHT);
+  const offset = (from, to) => (NET_ARCS[to].mid - NET_ARCS[from].mid + 2 * Math.PI) % (2 * Math.PI);
+  const ends = FACTORS.map((f, i) => {
+    const sorted = touching(i).map(({l, li}) => ({li, other: l.a === i ? l.b : l.a, w: linkWeight(l) * unit}))
+      .sort((x, y) => offset(i, y.other) - offset(i, x.other));
+    const first = NET_ARCS[i].mid - sorted.reduce((s, e) => s + e.w, 0) / 2;
+    return sorted.reduce((acc, e) => {
+      const start = acc.length ? acc[acc.length - 1].slot[1] : first;
+      return [...acc, {li: e.li, slot: [start, start + e.w]}];
+    }, []);
+  });
+  const slotOf = (i, li) => ends[i].find(e => e.li === li).slot;
+  return links.map((l, li) => ({...l, endA: slotOf(l.a, li), endB: slotOf(l.b, li)}));
+}
+
+// A factor's connection score adds up how far each of its shown ties exceeds chance (lift − 1).
+// The best-connected factor gets the thickest arc.
+function connections(links) {
+  const ties = FACTORS.map((f, i) => links.filter(l => l.a === i || l.b === i).sort((x, y) => y.lift - x.lift));
+  const scores = ties.map(t => t.reduce((s, l) => s + l.lift - 1, 0));
+  const top = Math.max(...scores, 0);
+  const outer = scores.map(s => NET_R_IN + NET_BAND_MIN + (top ? (NET_BAND_MAX - NET_BAND_MIN) * s / top : 0));
+  return {ties, scores, outer};
 }
 
 const pairLabel = p => `${FACTORS[p.a].label} + ${FACTORS[p.b].label}`;
+const tieCount = n => `${n} ${n === 1 ? 'tie' : 'ties'}`;
 
-function networkNode(node, sim, stats) {
-  const ring = Math.max(4, sim.r * .3), mid = sim.r - ring / 2, around = 2 * Math.PI * mid;
-  const dash = node.group === 'behavior' ? ' stroke-dasharray="5 3"' : node.group === 'history' ? ' stroke-dasharray="1.5 2.5"' : '';
+// Labels sit outside the arc: left of the circle they end at the anchor, right of it they start
+// there, and near the bottom they hang below it.
+function arcLabel(i, node, ties) {
+  const {mid} = NET_ARCS[i], [x, y] = polar(NET_LABEL_R, mid);
+  const s = Math.sin(mid), c = Math.cos(mid);
+  const anchor = s > .2 ? 'start' : s < -.2 ? 'end' : 'middle';
+  const top = c < -.5 ? 11 : c > .5 ? -NET_LINE - 4 : -NET_LINE / 2 + 4;
+  const stat = node.n ? `${node.n} · ${pct(node.pass)} ≥10 · ${tieCount(ties.length)}` : 'no records';
+  return `<text class="net-label" x="${x}" y="${round(y + top)}" text-anchor="${anchor}"><tspan class="value">${esc(node.label)}</tspan>`
+    + `<tspan x="${x}" dy="${NET_LINE}">${stat}</tspan><tspan class="net-sel-label" x="${x}" dy="${NET_LINE}"></tspan></text>`;
+}
+
+// Blue is the share reaching a final grade ≥10, orange the rest; thickness is the connection score.
+function networkNode(node, i, stats, conn) {
+  const {start, end} = NET_ARCS[i], split = start + (end - start) * node.pass, outer = conn.outer[i];
   const tip = node.n
-    ? `${node.label}: ${node.n} course records (${pct(node.n / stats.total)} of this view); ${pct(node.pass)} reach a final grade ≥10, against ${pct(stats.pass)} overall. Click or press Enter to select them; drag to move, double-click to release.`
+    ? `${node.label}: ${node.n} course records (${pct(node.n / stats.total)} of this view); ${pct(node.pass)} reach a final grade ≥10, against ${pct(stats.pass)} overall. ${tieCount(conn.ties[i].length)} shown, connection score ${conn.scores[i].toFixed(1)}. Click or press Enter to select them.`
     : `${node.label}: no course records in this view.`;
-  return `<g class="net-node${node.n ? '' : ' is-empty'}" data-index="${sim.i}">`
-    + `<circle r="${round(sim.r)}" fill="white"/>`
-    + (node.n ? `<circle r="${round(mid)}" fill="none" stroke="${orange}" stroke-width="${round(ring)}"/><circle r="${round(mid)}" fill="none" stroke="${teal}" stroke-width="${round(ring)}" stroke-dasharray="${round(around * node.pass)} ${round(around)}" transform="rotate(-90)"/>` : '')
-    + `<circle class="net-sel" r="0"/>`
-    + `<circle r="${round(sim.r)}" fill="none" stroke="#172b4d" stroke-width="1.2"${dash}/>`
-    + (sim.r >= 17 && node.n ? `<text class="value" y="4" text-anchor="middle">${pct(node.pass)}</text>` : '')
-    + `<text class="net-label" y="${round(sim.r + 14)}" text-anchor="middle"><tspan class="value">${esc(node.label)}</tspan></text>`
-    + `<text class="net-label net-sel-label" y="${round(sim.r + 27)}" text-anchor="middle"></text>`
-    + mark('circle', `r="${round(sim.r)}" class="net-hit" data-key="${node.key}"`, esc(tip), false)
+  const band = node.n
+    ? `<path d="${sectorPath(NET_R_IN, outer, start, split)}" fill="${teal}"/><path d="${sectorPath(NET_R_IN, outer, split, end)}" fill="${orange}"/>`
+    : `<path d="${sectorPath(NET_R_IN, outer, start, end)}" fill="#cbd5e1"/>`;
+  return `<g class="net-node${node.n ? '' : ' is-empty'}" data-index="${i}">${band}<path class="net-sel" d=""/>${arcLabel(i, node, conn.ties[i])}`
+    + mark('path', `d="${sectorPath(NET_R_IN, outer + NET_SEL_GAP + NET_SEL_TRACK + 1, start, end)}" class="net-hit" data-key="${node.key}"`, esc(tip), false)
     + '</g>';
 }
 
-function networkEdge(link, stats) {
+function networkEdge(link) {
   const tip = `${pairLabel(link)}: ${link.n} course records have both, ${link.lift.toFixed(2)}× what independence predicts; ${pct(link.pass)} reach a final grade ≥10. Click or press Enter to select them.`;
-  const ends = `data-ai="${link.a}" data-bi="${link.b}"`;
-  return `<g class="net-edge" data-a="${FACTORS[link.a].key}" data-b="${FACTORS[link.b].key}"><line class="net-link-vis" ${ends} stroke-width="${round(1 + (link.lift - 1) * 4)}"/>`
-    + mark('line', `class="net-link" ${ends} stroke-width="${round(Math.max(12, 1 + (link.lift - 1) * 4))}" data-a="${FACTORS[link.a].key}" data-b="${FACTORS[link.b].key}"`, esc(tip), false) + '</g>';
+  const keys = `data-a="${FACTORS[link.a].key}" data-b="${FACTORS[link.b].key}"`;
+  return `<g class="net-edge" ${keys}>`
+    + mark('path', `class="net-link" d="${ribbonPath(link)}" fill="${liftColor(link.lift)}" data-ai="${link.a}" data-bi="${link.b}" ${keys}`, esc(tip), false) + '</g>';
 }
 
-function networkCallout(stats) {
+function networkCallout(stats, conn) {
   const strongest = stats.pairs.filter(p => p.n >= NET_MIN_PAIR).sort((x, y) => y.lift - x.lift)[0];
   if (!strongest) return '<p class="net-callout">Too few records in this view to compare factor pairs.</p>';
   const [a, b] = [FACTORS[strongest.a], FACTORS[strongest.b]];
-  return `<p class="net-callout">Strongest tie: <strong>${esc(a.label)} + ${esc(b.label)}</strong>, ${strongest.lift.toFixed(1)}× chance · ${pct(strongest.pass)} pass vs ${pct(stats.pass)} overall <button type="button" id="net-strongest" data-a="${a.key}" data-b="${b.key}">Select</button></p>`;
+  const hub = conn.scores.indexOf(Math.max(...conn.scores));
+  const hubText = conn.scores[hub] > 0 ? ` · Most connected: <strong>${esc(FACTORS[hub].label)}</strong> (${tieCount(conn.ties[hub].length)})` : '';
+  return `<p class="net-callout">Strongest tie: <strong>${esc(a.label)} + ${esc(b.label)}</strong>, ${strongest.lift.toFixed(1)}× chance · ${pct(strongest.pass)} pass vs ${pct(stats.pass)} overall <button type="button" id="net-strongest" data-a="${a.key}" data-b="${b.key}">Select</button>${hubText}</p>`;
 }
 
 function network() {
   const stats = factorStats(records), threshold = +$('net-lift').value;
   $('net-lift-value').textContent = threshold.toFixed(1) + '×';
-  const nodes = stats.nodes.map((f, i) => {
-    const prev = netPositions[f.key] || initialPosition(f), r = nodeRadius(f.n, stats.total);
-    return {key: f.key, label: f.label, i, r, ...nodeBox(f.label, r), x: prev.x, y: prev.y, vx: 0, vy: 0, pinned: prev.pinned};
-  });
-  const links = stats.pairs.filter(p => p.lift >= threshold && p.n >= NET_MIN_PAIR);
-  const isFirst = !netSim;
-  netSim = {nodes, links, stats, alpha: netSim ? netSim.alpha : 0};
-  let svg = `<svg viewBox="0 0 ${NET_W} ${NET_H}" role="img" aria-label="Network of risk factors; links join factors that co-occur more often than chance">`;
-  if (!stats.total) svg += `<text x="${NET_W / 2}" y="${NET_H / 2}" text-anchor="middle">No records</text>`;
-  svg += `<g class="net-edges">${links.map(l => networkEdge(l, stats)).join('')}</g>`;
-  svg += `<g class="net-nodes">${stats.nodes.map((node, i) => networkNode(node, nodes[i], stats)).join('')}</g></svg>`;
-  $('net-callout').innerHTML = networkCallout(stats);
+  // Strongest ribbons are drawn last so they sit on top.
+  const links = ribbonSlots(stats.pairs.filter(p => p.lift >= threshold && p.n >= NET_MIN_PAIR)).sort((x, y) => x.lift - y.lift);
+  const conn = connections(links);
+  netView = {stats, links, conn};
+  const caption = NET_CY - NET_LABEL_R - 26;
+  let svg = `<svg viewBox="0 0 ${NET_W} ${NET_H}" role="img" aria-label="Chord diagram of risk factors; ribbons join factors that co-occur more often than chance">`;
+  svg += `<text class="net-group" x="${NET_CX - 14}" y="${caption}" text-anchor="end">◂ CONTEXT</text><text class="net-group" x="${NET_CX + 14}" y="${caption}">BEHAVIOR ▸</text>`;
+  if (!stats.total) svg += `<text x="${NET_CX}" y="${NET_CY}" text-anchor="middle">No records</text>`;
+  svg += `<g class="net-edges">${links.map(networkEdge).join('')}</g>`;
+  svg += `<g class="net-nodes">${stats.nodes.map((node, i) => networkNode(node, i, stats, conn)).join('')}</g></svg>`;
+  $('net-callout').innerHTML = networkCallout(stats, conn);
   $('network-chart').innerHTML = svg;
   showNetDetail(null);
-  applyNetworkPositions();
-  heatNetwork(isFirst ? 1 : .5);
   scheduleSelectionUpdate();
 }
 
-// The side panel shows the numbers behind whichever circle or link is hovered or focused.
-const NET_HINT = '<p>Point at a circle or link for details.</p>';
+// The side panel shows the numbers behind whichever arc or ribbon is hovered or focused.
+const NET_HINT = '<p>Point at an arc or ribbon for details.</p>';
 
 function nodeDetail(i) {
-  const {stats} = netSim, node = stats.nodes[i];
-  const tie = stats.pairs.filter(p => (p.a === i || p.b === i) && p.n >= NET_MIN_PAIR).sort((x, y) => y.lift - x.lift)[0];
+  const {stats, conn} = netView, node = stats.nodes[i], ties = conn.ties[i];
+  const list = ties.slice(0, NET_MAX_TIES).map(l => `<dt>${esc(FACTORS[l.a === i ? l.b : l.a].label)}</dt><dd>${l.lift.toFixed(1)}×</dd>`).join('');
+  const more = ties.length > NET_MAX_TIES ? `<p>+ ${ties.length - NET_MAX_TIES} more</p>` : '';
   return `<h4>${esc(node.label)}</h4><dl><dt>Records</dt><dd>${node.n}</dd><dt>Pass rate</dt><dd>${node.n ? pct(node.pass) : '—'} <small>vs ${pct(stats.pass)}</small></dd>`
-    + (tie ? `<dt>Strongest tie</dt><dd>${esc(FACTORS[tie.a === i ? tie.b : tie.a].label)} ${tie.lift.toFixed(1)}×</dd>` : '') + '</dl>';
+    + `<dt>Connection score</dt><dd>${conn.scores[i].toFixed(1)}</dd></dl>`
+    + (ties.length ? `<h5>Ties shown, strongest first</h5><dl>${list}</dl>${more}` : '<p>No ties at this minimum lift.</p>');
 }
 
 function pairDetail(a, b) {
-  const {stats} = netSim, pair = stats.pairs.find(p => p.a === a && p.b === b), [A, B] = [stats.nodes[a], stats.nodes[b]];
+  const {stats} = netView, pair = stats.pairs.find(p => p.a === a && p.b === b), [A, B] = [stats.nodes[a], stats.nodes[b]];
   const expected = A.n * B.n / stats.total;
   return `<h4>${esc(A.label)} + ${esc(B.label)}</h4><dl><dt>Records with both</dt><dd>${pair.n}</dd><dt>Expected by chance</dt><dd>${expected.toFixed(1)}</dd><dt>Lift</dt><dd>${pair.lift.toFixed(1)}×</dd><dt>Pass rate</dt><dd>${pct(pair.pass)} <small>vs ${pct(stats.pass)}</small></dd></dl>`;
 }
 
 function showNetDetail(el) {
   const panel = $('net-detail');
-  if (!panel || !netSim) return;
+  if (!panel || !netView) return;
   if (!el) panel.innerHTML = NET_HINT;
   else if (el.classList.contains('net-link')) panel.innerHTML = pairDetail(+el.dataset.ai, +el.dataset.bi);
   else panel.innerHTML = nodeDetail(+el.closest('.net-node').dataset.index);
@@ -512,16 +520,16 @@ const netBrush = el => el.dataset.key
   ? {type: 'factor', key: el.dataset.key}
   : {type: 'pair', a: el.dataset.a, b: el.dataset.b};
 
-// Inner discs show what share of each factor's records is in the current selection.
+// A thin outer bar along each arc shows what share of that factor's records is in the current selection.
 function drawNetworkOverlay(selected, hasSelection) {
   const svg = $('network-chart').querySelector('svg');
-  if (!svg || !netSim) return;
+  if (!svg || !netView) return;
   svg.classList.toggle('has-selection', hasSelection);
   svg.querySelectorAll('.net-node').forEach(g => {
-    const node = netSim.stats.nodes[+g.dataset.index], sim = netSim.nodes[+g.dataset.index];
-    const n = hasSelection ? selected.filter(node.test).length : 0;
-    const inner = Math.max(4, sim.r * .7);
-    g.querySelector('.net-sel').setAttribute('r', node.n ? round(inner * Math.sqrt(n / node.n)) : 0);
+    const i = +g.dataset.index, node = netView.stats.nodes[i], {start, end} = NET_ARCS[i];
+    const n = hasSelection ? selected.filter(node.test).length : 0, share = node.n ? n / node.n : 0;
+    const r0 = netView.conn.outer[i] + NET_SEL_GAP;
+    g.querySelector('.net-sel').setAttribute('d', sectorPath(r0, r0 + NET_SEL_TRACK, start, start + (end - start) * share));
     g.querySelector('.net-sel-label').textContent = hasSelection ? `${n} selected` : '';
     g.classList.toggle('is-unselected', hasSelection && !n);
   });
@@ -532,48 +540,13 @@ function drawNetworkOverlay(selected, hasSelection) {
   });
 }
 
-function svgPoint(svg, event) {
-  return new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM().inverse());
-}
-
-function startNodeDrag(event) {
-  const hit = event.target.closest('.net-hit');
-  if (!hit || !netSim) return;
-  event.preventDefault();
-  hit.setPointerCapture(event.pointerId);
-  netDrag = {index: +hit.closest('.net-node').dataset.index, start: {x: event.clientX, y: event.clientY}, moved: false};
-}
-
-function moveNodeDrag(event) {
-  if (!netDrag) return;
-  if (!netDrag.moved && Math.hypot(event.clientX - netDrag.start.x, event.clientY - netDrag.start.y) < NET_DRAG_MIN) return;
-  const p = svgPoint($('network-chart').querySelector('svg'), event);
-  netDrag = {...netDrag, moved: true};
-  netSim = {...netSim, nodes: netSim.nodes.map((n, i) => i === netDrag.index
-    ? {...n, x: clamp(p.x, n.hw, NET_W - n.hw), y: clamp(p.y, n.top, NET_H - n.bottom), pinned: true}
-    : n)};
-  heatNetwork(.3);
-}
-
-// A drag that moved suppresses the click that follows it; a still press is a click.
-function endNodeDrag() {
-  if (netDrag && netDrag.moved) netSim = {...netSim, justDragged: true};
-  netDrag = null;
-}
-
-function releaseNode(event) {
-  const hit = event.target.closest('.net-hit');
-  if (!hit || !netSim) return;
-  const index = +hit.closest('.net-node').dataset.index;
-  netSim = {...netSim, nodes: netSim.nodes.map((n, i) => i === index ? {...n, pinned: false} : n)};
-  heatNetwork(.4);
-}
-
-// Hovering or focusing a node darkens its links.
+// Hovering or focusing an arc brings its ribbons forward and fades the rest.
 function highlightNodeLinks(event, isOn) {
   const hit = event.target.closest && event.target.closest('.net-hit');
   if (!hit) return;
-  $('network-chart').querySelectorAll('.net-edge').forEach(edge => {
+  const chart = $('network-chart');
+  chart.querySelector('svg').classList.toggle('has-hot', isOn);
+  chart.querySelectorAll('.net-edge').forEach(edge => {
     edge.classList.toggle('is-hot', isOn && (edge.dataset.a === hit.dataset.key || edge.dataset.b === hit.dataset.key));
   });
 }
@@ -585,8 +558,9 @@ lines('factors',['0','1','2','3','4'],[{name:'Context factors',color:teal,values
 tree();behaviorByContext();network();matrix();}
 function exportCsv(){let keys=Object.keys(all[0]),quote=v=>'"'+String(v).replaceAll('"','""')+'"';let csv=[keys.map(quote).join(','),...records.map(r=>keys.map(k=>quote(r[k])).join(','))].join('\r\n');let url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='school-success-filtered.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 for(let id of ['subject','school','support'])$(id).addEventListener('change',render);
-$('reset').onclick=()=>{$('subject').value='all';$('school').value='all';$('support').value='schoolsup';$('net-lift').value='1.3';matrixBrushes=[];render();};$('export').onclick=exportCsv;
+$('reset').onclick=()=>{$('subject').value='all';$('school').value='all';$('support').value='schoolsup';$('net-lift').value='1.3';$('matrix-failed').checked=false;matrixBrushes=[];render();};$('export').onclick=exportCsv;
 $('matrix-clear').onclick=()=>setMatrixBrushes([]);
+$('matrix-failed').addEventListener('change',matrix);
 $('network-clear').onclick=()=>setMatrixBrushes([]);
 $('net-lift').addEventListener('input',network);
 const netChart=$('network-chart');
@@ -595,14 +569,8 @@ $('net-callout').addEventListener('click',e=>{
   if(strongest)toggleBrush({type:'pair',a:strongest.dataset.a,b:strongest.dataset.b},e);
 });
 netChart.addEventListener('click',e=>{
-  if(netSim&&netSim.justDragged){netSim={...netSim,justDragged:false};return;}
   const el=e.target.closest('.net-hit,.net-link');if(el)toggleBrush(netBrush(el),e);
 });
-netChart.addEventListener('pointerdown',startNodeDrag);
-netChart.addEventListener('pointermove',moveNodeDrag);
-netChart.addEventListener('pointerup',endNodeDrag);
-netChart.addEventListener('pointercancel',endNodeDrag);
-netChart.addEventListener('dblclick',releaseNode);
 netChart.addEventListener('pointerover',e=>highlightNodeLinks(e,true));
 netChart.addEventListener('pointerout',e=>highlightNodeLinks(e,false));
 netChart.addEventListener('focusin',e=>highlightNodeLinks(e,true));
