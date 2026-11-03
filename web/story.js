@@ -116,24 +116,115 @@ function statBand(){
   ].map(([n,l])=>`<div class="stat"><strong>${n}</strong><span>${l}</span></div>`).join('');
 }
 
+
+
+// Click-to-progress: stage 1 shows G1, stage 2 adds the G1→G2 flows, stage 3 adds G2→G3.
+let sankeyStage=1;
+const SANKEY_LABELS=['Show G2 →','Show G3 →','Start over ↺'];
+function applySankeyStage(){
+  const root=$('higher');
+  root.querySelectorAll('.sk-step').forEach(el=>{
+    const from=+el.dataset.from, until=el.dataset.until?+el.dataset.until:Infinity;
+    const on=sankeyStage>=from&&sankeyStage<=until;
+    el.classList.toggle('is-on',on);
+    el.setAttribute('aria-hidden',String(!on));
+    if(el.hasAttribute('tabindex'))el.setAttribute('tabindex',on?'0':'-1');
+  });
+  const btn=$('sankey-next'),step=$('sankey-step');
+  if(btn)btn.textContent=SANKEY_LABELS[sankeyStage-1];
+  if(step)step.textContent=`Step ${sankeyStage} of 3 · ${['G1 grades','G1 → G2','G2 → G3 (final)'][sankeyStage-1]}`;
+}
+function advanceSankey(){sankeyStage=sankeyStage%3+1;applySankeyStage();}
+document.addEventListener('click',e=>{
+  if(e.target.closest('#sankey-next'))return advanceSankey();
+  if(sankeyStage<3&&e.target.closest('#higher .sankey-wrap'))advanceSankey();
+});
+
+function higherSankey(){
+  const bands=[{name:'14 and above',color:teal},{name:'10 to 13',color:'#8aa4bf'},{name:'Below 10',color:orange}];
+  const band=g=>g>=14?0:g>=10?1:2, periods=['G1','G2','G3'], f=v=>v.toFixed(1);
+  const X=[190,410,630], NW=16, TOP=40, GAP=10, SCALE=190;
+  const take=[];
+  const panels=[['Plans higher education','yes'],['No higher-education plans','no']].map(([label,val])=>{
+    const rows=records.filter(r=>r.higher===val), total=rows.length;
+    if(!total)return `<div class="sankey-panel"><h4>${label}</h4><p>No records</p></div>`;
+    const counts=periods.map(p=>[0,1,2].map(k=>rows.filter(r=>band(r[p])===k).length));
+    const nodeY=counts.map(col=>{let y=TOP;return col.map(n=>{const t=y;y+=n/total*SCALE+GAP;return t;});});
+    take.push([label,100*counts[2][2]/total,100*counts[2][0]/total,100*counts[2][1]/total,total]);
+    let svg=`<svg viewBox="0 0 860 ${TOP+SCALE+2*GAP+14}" role="img" aria-label="Sankey diagram of grade bands from G1 to G3 for students: ${label.toLowerCase()}">`;
+    periods.forEach((p,i)=>svg+=`<text class="sk-step" data-from="${i+1}" x="${X[i]+NW/2}" y="22" text-anchor="middle" style="font-weight:700">${p==='G3'?'G3 (final)':p}</text>`);
+    for(let p=0;p<2;p++){
+      const srcOff=[0,0,0],tgtOff=[0,0,0];
+      for(let s=0;s<3;s++)for(let t=0;t<3;t++){
+        const n=rows.filter(r=>band(r[periods[p]])===s&&band(r[periods[p+1]])===t).length;
+        if(!n)continue;
+        const h=n/total*SCALE,x0=X[p]+NW,x1=X[p+1],mx=(x0+x1)/2;
+        const a0=nodeY[p][s]+srcOff[s],a1=nodeY[p+1][t]+tgtOff[t];
+        srcOff[s]+=h;tgtOff[t]+=h;
+        const d=`M${x0},${f(a0)} C${mx},${f(a0)} ${mx},${f(a1)} ${x1},${f(a1)} L${x1},${f(a1+h)} C${mx},${f(a1+h)} ${mx},${f(a0+h)} ${x0},${f(a0+h)} Z`;
+        svg+=mark('path',`class="sk-step" data-from="${p+2}" d="${d}" fill="${bands[s].color}" fill-opacity="${s===t?.38:.62}" stroke="#fff" stroke-width=".5"`,`${label}: ${n} of ${total} records (${(100*n/total).toFixed(1)}%) go from ${bands[s].name} in ${periods[p]} to ${bands[t].name} in ${periods[p+1]}`);
+      }
+    }
+    periods.forEach((p,i)=>counts[i].forEach((n,k)=>{
+      if(!n)return;
+      const h=n/total*SCALE,pc=(100*n/total).toFixed(0),cy=nodeY[i][k]+h/2+4;
+      svg+=mark('rect',`class="sk-step" data-from="${i+1}" x="${X[i]}" y="${f(nodeY[i][k])}" width="${NW}" height="${f(h)}" fill="${bands[k].color}"`,`${label}, ${p}: ${bands[k].name}, ${pc}% (${n} of ${total} records)`);
+      if(i===0)svg+=`<text class="sk-step" data-from="1" x="${X[0]-8}" y="${f(cy)}" text-anchor="end">${bands[k].name} · ${pc}%</text>`;
+      if(i===1)svg+=`<text class="sk-step" data-from="2" data-until="2" x="${X[1]+NW+8}" y="${f(cy)}">${pc}% · ${bands[k].name}</text>`;
+      if(i===2)svg+=`<text class="sk-step" data-from="3" x="${X[2]+NW+8}" y="${f(cy)}">${pc}% · ${bands[k].name}</text>`;
+    }));
+    return `<div class="sankey-panel"><h4>${label} <span>n=${total}</span></h4><div class="sankey-wrap">${svg}</svg></div></div>`;
+  });
+  $('higher').innerHTML=legend(bands.map(b=>[b.name,b.color]))+panels.join('');
+  applySankeyStage();
+  const [yes,no]=take, p=v=>v.toFixed(0)+'%';
+  $('higher-text').innerHTML=take.length===2
+    ?`<strong>Motivation splits the grade distribution.</strong> Students with no higher-education plans tend to stop at a bare pass or below: ${p(no[1])} finish under 10, ${p(no[3])} land at 10 to 13 and only ${p(no[2])} reach 14 or above (n=${no[4]}). Students who plan higher education are far more likely to reach the top band (${p(yes[2])}) and fail far less often (${p(yes[1])} vs ${p(no[1])}). Higher ambition goes with a very different grade distribution, an association rather than a proven cause: plans are self-reported and may themselves reflect earlier success or struggle.`
+    :'';
+  $('higher-takeaway').innerHTML=take.length===2?`<strong>${take[0][0]}: ${take[0][1].toFixed(0)}% below 10 at G3</strong><span>${take[1][0]}: ${take[1][1].toFixed(0)}%</span>`:'';
+}
+
+let currentSupport='schoolsup';
+function supportChart(key){
+  currentSupport=key;
+  const school=key==='schoolsup', name=school?'school':'family';
+  const g=groups(context), has=a=>a.filter(r=>r[key]==='yes'), no=a=>a.filter(r=>r[key]==='no');
+  percentBars('support-chart',['0','1','2','3','4'],[
+    {name:`${school?'School':'Family'} support received`,color:teal,values:g.map(has)},
+    {name:`No ${name} support`,color:orange,values:g.map(no)}
+  ],`Percent of course records with and without ${name} support, by context factor count`,'Context factor count');
+  const share=rows=>rows.length?100*has(rows).length/rows.length:null;
+  const low=records.filter(r=>context(r)<=1), high=records.filter(r=>context(r)>=3);
+  const pct=v=>v===null?'—':v.toFixed(0)+'%';
+  const first=share(g[0]), last=share(g[4]), lo=share(low), hi=share(high);
+  const peak=g.map(share).reduce((b,v,i)=>v!==null&&v>b[0]?[v,i]:b,[-1,0]);
+  const title=$('support-title'), text=$('support-text'), note=$('support-note');
+  if(school){
+    title.textContent='School support does not follow disadvantage';
+    text.innerHTML=`School support is <strong>not offered at higher rates to students with more disadvantages</strong>. ${pct(lo)} of records with 0 or 1 context factors receive it, compared with ${pct(hi)} of records with 3 or 4. The share is ${pct(first)} at zero factors, peaks at ${pct(peak[0])} with ${peak[1]} factors and falls to ${pct(last)} at four, so the students facing the most barriers are no more likely to be reached.`;
+    note.textContent='School support is a yes/no record, not a measure of how much help was given. Groups with three or four factors are small, so their shares are unstable. Differences cannot measure the benefit of support.';
+  }else{
+    title.textContent='Family support is highest with the fewest disadvantages';
+    text.innerHTML=`Family support is <strong>higher where the disadvantage count is low</strong>. ${pct(lo)} of records with 0 or 1 context factors receive it, compared with ${pct(hi)} of records with 3 or 4. The share falls from ${pct(first)} at zero factors to ${pct(last)} at four, so families facing the most barriers are the least likely to report extra help at home.`;
+    note.textContent='Family support is a yes/no record, not a measure of how much help was given. Groups with three or four factors are small, so their shares are unstable. This is an association, not a cause.';
+  }
+  document.querySelectorAll('.support-toggle button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.support===key)));
+}
+document.addEventListener('click',e=>{const b=e.target.closest('.support-toggle button');if(b)supportChart(b.dataset.support);});
+
 function render(){
   familyBoxplot();
   staircase();
   statBand();
-  percentBars('support-chart',['0','1','2','3','4'],[
-    {name:'School support received',color:teal,values:groups(context).map(a=>a.filter(r=>r.schoolsup==='yes'))},
-    {name:'No school support',color:orange,values:groups(context).map(a=>a.filter(r=>r.schoolsup==='no'))}
-  ],'Percent of course records with and without school support, by context factor count','Context factor count');
-  const internet=records.filter(r=>r.internet==='yes'), noInternet=records.filter(r=>r.internet==='no');
-  const series=[];
-  for(const [name,color,a] of [['Internet at home',teal,internet],['No internet',orange,noInternet]])series.push({name,color,values:['G1','G2','G3'].map(g=>a.map(r=>({G3:r[g]})))});
-  lines('internet',['G1','G2','G3'],series,'Grades over three periods by internet access','Grade period');
+  supportChart(currentSupport);
+  higherSankey();
   tree();
+  if(window.drawLinkedViews)window.drawLinkedViews(records);
 }
 
 function tip(event){
   const target=event.target.closest('[data-tip]');
-  if(!target)return;
+  if(!target||target.closest('#network-chart'))return;
   const box=target.getBoundingClientRect(), tooltip=$('tooltip');
   tooltip.textContent=target.dataset.tip;
   tooltip.hidden=false;
