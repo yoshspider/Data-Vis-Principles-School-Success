@@ -191,7 +191,7 @@ function drawGradeDist(selected, hasSelection) {
 function updateMatrixSelection() {
   selectionFrame = 0;
   const selected = selectedRows(), hasSelection = matrixBrushes.length > 0;
-  drawNetworkOverlay(selected, hasSelection);
+  drawNetworkOverlay();
   drawGradeDist(selected, hasSelection);
   const svg = $('matrix').querySelector('svg');
   if (!svg) return;
@@ -276,8 +276,8 @@ const selectBar = (bar, event) => toggleBrush({type: 'bar', key: bar.dataset.key
 const round = v => +v.toFixed(1);
 const NET_W = 920, NET_H = 620, NET_CX = 460, NET_CY = 310, NET_R_IN = 205, NET_BAND_MIN = 6, NET_BAND_MAX = 30;
 const NET_GROUP_GAP = .2, NET_ARC_PAD = .035, NET_SLOT_INSET = .03, NET_FULL_ARC_WEIGHT = 3;
-const NET_MIN_PAIR = 10, NET_SEL_GAP = 2, NET_SEL_TRACK = 5, NET_LABEL_GAP = 14, NET_LINE = 15, NET_MAX_TIES = 4;
-const NET_LABEL_R = NET_R_IN + NET_BAND_MAX + NET_SEL_GAP + NET_SEL_TRACK + NET_LABEL_GAP;
+const NET_MIN_PAIR = 10, NET_LABEL_GAP = 16, NET_MAX_TIES = 3;
+const NET_LABEL_R = NET_R_IN + NET_BAND_MAX + NET_LABEL_GAP;
 // Ribbons between two groups are pulled toward each group's anchor inside the circle, so ties
 // between the same pair of groups travel together as one bundle.
 const NET_BUNDLE_R = .4, NET_BUNDLE_PULL = .9;
@@ -395,33 +395,29 @@ const pairLabel = p => `${FACTORS[p.a].label} + ${FACTORS[p.b].label}`;
 const tieCount = n => `${n} ${n === 1 ? 'tie' : 'ties'}`;
 
 // Labels sit outside the arc: left of the circle they end at the anchor, right of it they start
-// there, and near the bottom they hang below it.
-function arcLabel(i, node, ties) {
+// there, and near the bottom they hang below it. Only the name shows; numbers appear on click.
+function arcLabel(i, node) {
   const {mid} = NET_ARCS[i], [x, y] = polar(NET_LABEL_R, mid);
   const s = Math.sin(mid), c = Math.cos(mid);
   const anchor = s > .2 ? 'start' : s < -.2 ? 'end' : 'middle';
-  const top = c < -.5 ? 11 : c > .5 ? -NET_LINE - 4 : -NET_LINE / 2 + 4;
-  const stat = node.n ? `${node.n} · ${pct(node.pass)} ≥10 · ${tieCount(ties.length)}` : 'no records';
-  return `<text class="net-label" x="${x}" y="${round(y + top)}" text-anchor="${anchor}"><tspan class="value">${esc(node.label)}</tspan>`
-    + `<tspan x="${x}" dy="${NET_LINE}">${stat}</tspan><tspan class="net-sel-label" x="${x}" dy="${NET_LINE}"></tspan></text>`;
+  const top = c < -.5 ? 11 : c > .5 ? -4 : 4;
+  return `<text class="net-label value" x="${x}" y="${round(y + top)}" text-anchor="${anchor}">${esc(node.label)}</text>`;
 }
 
-// Blue is the share reaching a final grade ≥10, orange the rest; thickness is the connection score.
+// Each arc is one solid colour, so a ribbon visibly joins the factor itself; its thickness is the
+// connection score. Final-grade outcomes appear in the side panel when the arc is clicked.
 function networkNode(node, i, stats, conn) {
-  const {start, end} = NET_ARCS[i], split = start + (end - start) * node.pass, outer = conn.outer[i];
+  const {start, end} = NET_ARCS[i], outer = conn.outer[i];
   const tip = node.n
-    ? `${node.label}: ${node.n} course records (${pct(node.n / stats.total)} of this view); ${pct(node.pass)} reach a final grade ≥10, against ${pct(stats.pass)} overall. ${tieCount(conn.ties[i].length)} shown, connection score ${conn.scores[i].toFixed(1)}. Click or press Enter to select them.`
+    ? `${node.label}: ${node.n} course records, ${tieCount(conn.ties[i].length)} shown. Click or press Enter for details.`
     : `${node.label}: no course records in this view.`;
-  const band = node.n
-    ? `<path d="${sectorPath(NET_R_IN, outer, start, split)}" fill="${teal}"/><path d="${sectorPath(NET_R_IN, outer, split, end)}" fill="${orange}"/>`
-    : `<path d="${sectorPath(NET_R_IN, outer, start, end)}" fill="#cbd5e1"/>`;
-  return `<g class="net-node${node.n ? '' : ' is-empty'}" data-index="${i}">${band}<path class="net-sel" d=""/>${arcLabel(i, node, conn.ties[i])}`
-    + mark('path', `d="${sectorPath(NET_R_IN, outer + NET_SEL_GAP + NET_SEL_TRACK + 1, start, end)}" class="net-hit" data-key="${node.key}"`, esc(tip), false)
+  return `<g class="net-node${node.n ? '' : ' is-empty'}" data-index="${i}"><path class="net-arc" d="${sectorPath(NET_R_IN, outer, start, end)}"/>${arcLabel(i, node)}`
+    + mark('path', `d="${sectorPath(NET_R_IN, outer + 4, start, end)}" class="net-hit" data-key="${node.key}"`, esc(tip), false)
     + '</g>';
 }
 
 function networkEdge(link) {
-  const tip = `${pairLabel(link)}: ${link.n} course records have both, ${link.lift.toFixed(2)}× what independence predicts; ${pct(link.pass)} reach a final grade ≥10. Click or press Enter to select them.`;
+  const tip = `${pairLabel(link)}: ${link.n} course records have both, ${link.lift.toFixed(2)}× what independence predicts; ${pct(link.pass)} reach a final grade ≥10. Click or press Enter for details.`;
   const keys = `data-a="${FACTORS[link.a].key}" data-b="${FACTORS[link.b].key}"`;
   return `<g class="net-edge" ${keys}>`
     + mark('path', `class="net-link" d="${ribbonPath(link)}" fill="${liftColor(link.lift)}" data-ai="${link.a}" data-bi="${link.b}" ${keys}`, esc(tip), false) + '</g>';
@@ -451,71 +447,94 @@ function network() {
   svg += `<g class="net-nodes">${stats.nodes.map((node, i) => networkNode(node, i, stats, conn)).join('')}</g></svg>`;
   $('net-callout').innerHTML = networkCallout(stats, conn);
   $('network-chart').innerHTML = svg;
-  showNetDetail(null);
   scheduleSelectionUpdate();
 }
 
-// The side panel shows the numbers behind whichever arc or ribbon is hovered or focused.
-const NET_HINT = '<p>Point at an arc or ribbon for details.</p>';
+// Details stay hidden until an arc or ribbon is clicked; then a small box opens beside it.
+// Blue is the share reaching a final grade ≥10, orange the share below, as in the other charts.
+const passBar = share => `<div class="net-pass" role="img" aria-label="${pct(share)} reach a final grade of 10 or more"><span style="width:${(100 * share).toFixed(1)}%"></span></div>`
+  + '<p class="net-pass-key">Blue: final grade 10+ · orange: below 10</p>';
+const closeButton = '<button type="button" class="net-close" aria-label="Close details">×</button>';
 
 function nodeDetail(i) {
   const {stats, conn} = netView, node = stats.nodes[i], ties = conn.ties[i];
-  const list = ties.slice(0, NET_MAX_TIES).map(l => `<dt>${esc(FACTORS[l.a === i ? l.b : l.a].label)}</dt><dd>${l.lift.toFixed(1)}×</dd>`).join('');
-  const more = ties.length > NET_MAX_TIES ? `<p>+ ${ties.length - NET_MAX_TIES} more</p>` : '';
-  return `<h4>${esc(node.label)}</h4><dl><dt>Records</dt><dd>${node.n}</dd><dt>Pass rate</dt><dd>${node.n ? pct(node.pass) : '—'} <small>vs ${pct(stats.pass)}</small></dd>`
-    + `<dt>Connection score</dt><dd>${conn.scores[i].toFixed(1)}</dd></dl>`
-    + (ties.length ? `<h5>Ties shown, strongest first</h5><dl>${list}</dl>${more}` : '<p>No ties at this minimum lift.</p>');
+  const chips = ties.slice(0, NET_MAX_TIES).map(l => `<li>${esc(FACTORS[l.a === i ? l.b : l.a].label)} <b>${l.lift.toFixed(1)}×</b></li>`).join('');
+  const more = ties.length > NET_MAX_TIES ? `<li>+${ties.length - NET_MAX_TIES} more</li>` : '';
+  return `${closeButton}<h4>${esc(node.label)}</h4>`
+    + `<p><strong>${node.n}</strong> records · <strong>${node.n ? pct(node.pass) : '—'}</strong> reach 10+ <small>(${pct(stats.pass)} overall)</small></p>`
+    + (node.n ? passBar(node.pass) : '')
+    + (ties.length ? `<p class="net-sub">Travels with</p><ul class="net-ties">${chips}${more}</ul>` : '<p class="net-sub">No ties at this minimum lift.</p>');
 }
 
 function pairDetail(a, b) {
   const {stats} = netView, pair = stats.pairs.find(p => p.a === a && p.b === b), [A, B] = [stats.nodes[a], stats.nodes[b]];
+  if (!pair) return '';
   const expected = A.n * B.n / stats.total;
-  return `<h4>${esc(A.label)} + ${esc(B.label)}</h4><dl><dt>Records with both</dt><dd>${pair.n}</dd><dt>Expected by chance</dt><dd>${expected.toFixed(1)}</dd><dt>Lift</dt><dd>${pair.lift.toFixed(1)}×</dd><dt>Pass rate</dt><dd>${pct(pair.pass)} <small>vs ${pct(stats.pass)}</small></dd></dl>`;
-}
-
-function showNetDetail(el) {
-  const panel = $('net-detail');
-  if (!panel || !netView) return;
-  if (!el) panel.innerHTML = NET_HINT;
-  else if (el.classList.contains('net-link')) panel.innerHTML = pairDetail(+el.dataset.ai, +el.dataset.bi);
-  else panel.innerHTML = nodeDetail(+el.closest('.net-node').dataset.index);
+  return `${closeButton}<h4>${esc(A.label)} + ${esc(B.label)}</h4>`
+    + `<p><strong>${pair.n}</strong> records have both · <strong>${pair.lift.toFixed(1)}×</strong> chance <small>(${expected.toFixed(1)} expected)</small></p>`
+    + `<p><strong>${pct(pair.pass)}</strong> reach 10+ <small>(${pct(stats.pass)} overall)</small></p>` + passBar(pair.pass);
 }
 
 const netBrush = el => el.dataset.key
   ? {type: 'factor', key: el.dataset.key}
   : {type: 'pair', a: el.dataset.a, b: el.dataset.b};
 
-// A thin outer bar along each arc shows what share of that factor's records is in the current selection.
-function drawNetworkOverlay(selected, hasSelection) {
+// The most recently clicked arc or ribbon is the one in focus.
+const netFocus = () => [...matrixBrushes].reverse().find(b => b.type === 'factor' || b.type === 'pair');
+const factorIndex = key => FACTORS.findIndex(f => f.key === key);
+const touchesFocus = (focus, key) => focus && (focus.type === 'factor' ? focus.key === key : focus.a === key || focus.b === key);
+const isFocusEdge = (focus, edge) => focus && (focus.type === 'factor'
+  ? edge.dataset.a === focus.key || edge.dataset.b === focus.key
+  : edge.dataset.a === focus.a && edge.dataset.b === focus.b);
+const clearNetFocus = () => setMatrixBrushes(matrixBrushes.filter(b => b.type !== 'factor' && b.type !== 'pair'));
+// Where the last click on the chart landed, so a ribbon's box opens at the click rather than
+// at the middle of a ribbon that may cross the whole circle.
+let netClickPoint = null;
+
+function focusDetail(focus) {
+  if (focus.type === 'factor') return nodeDetail(factorIndex(focus.key));
+  const [a, b] = [factorIndex(focus.a), factorIndex(focus.b)].sort((x, y) => x - y);
+  return pairDetail(a, b);
+}
+
+// Opens the box at the outer edge of the chart on the same side as its target, level with it, so
+// the highlighted ribbons in the middle of the circle stay visible.
+function placeDetail(panel, svg, focus) {
+  const area = panel.parentElement.getBoundingClientRect();
+  const target = focus.type === 'factor'
+    ? svg.querySelector(`.net-hit[data-key="${focus.key}"]`)
+    : svg.querySelector(`.net-link[data-a="${focus.a}"][data-b="${focus.b}"]`);
+  const rect = netClickPoint
+    ? {left: netClickPoint.x, right: netClickPoint.x, top: netClickPoint.y, bottom: netClickPoint.y}
+    : (target || svg).getBoundingClientRect();
+  netClickPoint = null;
+  const clampTo = (v, max) => Math.max(0, Math.min(max, v));
+  const [w, h] = [panel.offsetWidth, panel.offsetHeight];
+  const cx = (rect.left + rect.right) / 2 - area.left, cy = (rect.top + rect.bottom) / 2 - area.top;
+  panel.style.left = `${cx < area.width / 2 ? 0 : area.width - w}px`;
+  panel.style.top = `${clampTo(cy - h / 2, area.height - h)}px`;
+}
+
+// Clicking an arc or ribbon brings its ribbons forward, fades the rest and opens the details box.
+function drawNetworkOverlay() {
   const svg = $('network-chart').querySelector('svg');
   if (!svg || !netView) return;
-  svg.classList.toggle('has-selection', hasSelection);
-  svg.querySelectorAll('.net-node').forEach(g => {
-    const i = +g.dataset.index, node = netView.stats.nodes[i], {start, end} = NET_ARCS[i];
-    const n = hasSelection ? selected.filter(node.test).length : 0, share = node.n ? n / node.n : 0;
-    const r0 = netView.conn.outer[i] + NET_SEL_GAP;
-    g.querySelector('.net-sel').setAttribute('d', sectorPath(r0, r0 + NET_SEL_TRACK, start, start + (end - start) * share));
-    g.querySelector('.net-sel-label').textContent = hasSelection ? `${n} selected` : '';
-    g.classList.toggle('is-unselected', hasSelection && !n);
-  });
+  const focus = netFocus();
+  svg.classList.toggle('has-focus', Boolean(focus));
+  svg.querySelectorAll('.net-node').forEach(g => g.classList.toggle('is-focus', touchesFocus(focus, FACTORS[+g.dataset.index].key)));
+  svg.querySelectorAll('.net-edge').forEach(edge => edge.classList.toggle('is-hot', isFocusEdge(focus, edge)));
   svg.querySelectorAll('.net-hit, .net-link').forEach(el => {
     const isSelected = matrixBrushes.some(b => sameBrush(b, netBrush(el)));
     el.closest('.net-node, .net-edge').classList.toggle('is-selected', isSelected);
     el.setAttribute('aria-pressed', isSelected);
   });
+  const panel = $('net-detail');
+  if (!panel) return;
+  const html = focus ? focusDetail(focus) : '';
+  panel.hidden = !html;
+  panel.innerHTML = html;
+  if (html) placeDetail(panel, svg, focus);
 }
-
-// Hovering or focusing an arc brings its ribbons forward and fades the rest.
-function highlightNodeLinks(event, isOn) {
-  const hit = event.target.closest && event.target.closest('.net-hit');
-  if (!hit) return;
-  const chart = $('network-chart');
-  chart.querySelector('svg').classList.toggle('has-hot', isOn);
-  chart.querySelectorAll('.net-edge').forEach(edge => {
-    edge.classList.toggle('is-hot', isOn && (edge.dataset.a === hit.dataset.key || edge.dataset.b === hit.dataset.key));
-  });
-}
-
 
 function selectionKeys(e){
   if(e.key==='Escape')return setMatrixBrushes([]);
@@ -535,12 +554,9 @@ function wire(){
     const s=e.target.closest('#net-strongest');
     if(s)toggleBrush({type:'pair',a:s.dataset.a,b:s.dataset.b},e);
   });
-  netChart.addEventListener('click',e=>{const el=e.target.closest('.net-hit,.net-link');if(el)toggleBrush(netBrush(el),e);});
-  ['pointerover','focusin'].forEach(t=>netChart.addEventListener(t,e=>{
-    highlightNodeLinks(e,true);
-    const el=e.target.closest&&e.target.closest('[data-tip]');if(el)showNetDetail(el);
-  }));
-  ['pointerout','focusout'].forEach(t=>netChart.addEventListener(t,e=>highlightNodeLinks(e,false)));
+  netChart.addEventListener('click',e=>{const el=e.target.closest('.net-hit,.net-link');if(!el)return;netClickPoint=el.classList.contains('net-link')&&e.clientX?{x:e.clientX,y:e.clientY}:null;toggleBrush(netBrush(el),e);});
+  $('net-detail').addEventListener('click',e=>{if(e.target.closest('.net-close'))clearNetFocus();});
+  addEventListener('resize',scheduleSelectionUpdate);
   $('matrix').addEventListener('pointerdown',startBrush);
   $('matrix').addEventListener('pointermove',moveBrush);
   $('matrix').addEventListener('pointerup',endBrush);
