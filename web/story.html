@@ -27,7 +27,7 @@
 <h3 class="geo-bridge">Once we know the setting, what actually separates grades?</h3>
 <p class="section-body">Nursery attendance has only a small relationship with grades (about 0.4 points in mean final grade), family-size groups have medians one point apart and identical middle-50% ranges, and paid classes show no grade advantage (paid-class records average slightly lower). These weak results challenge the assumption that familiar demographic or financial factors automatically identify the students at most risk.</p>
 <div class="story-grid single">
-<article class="card hook-card">
+<article class="card hook-card" id="famsize">
 <p class="eyebrow">FAMILY SIZE · FINAL GRADE</p>
 <h3>Different household sizes, nearly the same grades</h3>
 <p>Final-grade distributions for households of three or fewer people and households of more than three.</p>
@@ -69,7 +69,7 @@
 <p class="section-summary">Students with any recorded past failure are far more likely to fall below the passing threshold.</p>
 <p class="section-body" id="failure-body">Among students with any past failure, 55.2% score below 10 and mean G3 is 7.99; among students with no past failure, 15.0% score below 10 and mean G3 is 12.05. Past academic history therefore provides the school board with a concrete group for early attention.</p>
 <div class="stat-band" id="failure-stats"></div>
-<article class="card">
+<article class="card" id="failures-card">
 <p class="eyebrow">PREVIOUS FAILURES</p>
 <h3>The staircase of achievement</h3>
 <p>Mean final grade by recorded past failures. Step heights follow the observed group means.</p>
@@ -84,14 +84,14 @@
 <p class="section-summary">The recommendation uses existing records to target outreach, then tests whether the support actually helps.</p>
 <p class="section-body">Use prior-failure records to begin early outreach, assess whether internet access or guardian circumstances create additional needs, offer targeted academic support, and track later outcomes to evaluate whether the support works. The lower observed average among school-support recipients may reflect that support is assigned to students already struggling, not that support harms grades.</p>
 <div class="story-grid solution">
-<article class="card">
+<article class="card" id="tree-card">
 <p class="eyebrow">A SUPPORT CONVERSATION</p>
 <h3>Where could help begin?</h3>
 <p>An illustrative decision tree: follow the questions from left to right to reach one of eight starting points, each with record counts, mean final grades and pass shares. Answer Yes or No beside each question to reveal the next one. Both answers can be open at once to compare paths; click an open answer again to close its branch, or use Back to undo a step. Tick “Show full tree” to see every path.</p>
 <div id="tree" class="tree"></div>
 <p class="note">A transparent discussion aid, not a trained model or validated recommendation. Every student can request support.</p>
 </article>
-<article class="card">
+<article class="card" id="support-card">
 <p class="eyebrow">WHO RECEIVES SUPPORT?</p>
 <h3 id="support-title">School support does not follow disadvantage</h3>
 <div class="support-toggle" role="group" aria-label="Type of support"><button type="button" data-support="schoolsup" aria-pressed="true">School support</button><button type="button" data-support="famsup" aria-pressed="false">Family support</button></div>
@@ -103,4 +103,4 @@
 </section>
 
 <footer><span>Source: <a href="https://archive.ics.uci.edu/dataset/320/student+performance" target="_blank" rel="noreferrer">Cortez (2008), UCI Student Performance</a> · CC BY 4.0</span><span>Runs locally · No external scripts or fonts</span></footer>
-</main><div id="tooltip" role="status" hidden></div><script src="data.js"></script><script src="tree.js"></script><script src="linked.js"></script><script src="story.js"></script><script src="geography.js"></script></body></html>
+</main><div id="tooltip" role="status" hidden></div><script src="data.js"></script><script src="tree.js"></script><script src="linked.js"></script><script src="story.js"></script><script src="geography.js"></script><script src="tips.js"></script></body></html>
