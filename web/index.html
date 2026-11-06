@@ -1,25 +1,114 @@
 <!doctype html>
-<html lang="en" class="explorer-root">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Student Performance Explorer</title><link rel="stylesheet" href="style.css"></head>
-<body class="explorer">
-<header class="site-header"><a href="#top" class="brand">Student Performance</a><span class="eyebrow">CS 6730 · SCHOOL SUCCESS EXPLORER</span><div class="header-actions"><a href="story.html" class="story-link">Read the data story →</a><button id="export">Export filtered CSV ↗</button></div></header>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Student Performance · Data Story</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="story.css"></head>
+<body class="story merged">
+<header class="site-header"><a href="#top" class="brand">Student Performance</a><span class="eyebrow">CS 6730 · SCHOOL SUCCESS EXPLORER</span><div class="header-actions"><button id="export">Export filtered CSV ↗</button></div></header>
 <main id="top">
-<section class="intro explorer-hero">
-<div class="hero-copy"><p class="eyebrow">STUDENT PERFORMANCE EXPLORER</p><h1>Understanding<br><span>student achievement</span></h1><p class="lead">Explore how family circumstances, access and study habits relate to grades in two Portuguese schools.</p><p class="intro-note">Observational data · 1,044 course records · Grades on a 0–20 scale</p></div>
-<aside class="hero-guide" aria-label="How to use this explorer"><p class="eyebrow">HOW TO EXPLORE</p><ol><li><span>01</span><p><strong>Shape the cohort</strong>Filter by subject, school or support type.</p></li><li><span>02</span><p><strong>Follow the story</strong>Move through five connected views.</p></li><li><span>03</span><p><strong>Test a pattern</strong>Hover marks, then walk the decision tree.</p></li></ol><a href="#v1">Begin exploring ↓</a></aside>
+<section class="cover">
+<p class="eyebrow">CS 6730 · DATA VISUALIZATION · FALL 2026</p>
+<h1>From familiar assumptions<br> to a concrete group</h1>
+<p class="lead">Four sections trace how the evidence narrows from weak demographic signals to past academic history.</p>
+<p class="byline">Yash Agrawal · Justin Bimal · Joshua Blackmon · Oluwatimi Omoteso · Abdulaziz Alajlan</p>
+<p class="intro-note">Mathematics and Portuguese · 1,044 course records (395 + 649) · Grades on a 0–20 scale</p>
+<a class="scroll-cue" href="#explore">Explore the data <span aria-hidden="true">↓</span></a>
 </section>
-<section class="filters" aria-label="Filter course records"><div class="filter-heading"><p class="eyebrow">CONTROL PANEL</p><strong>Shape the view</strong></div><label>Subject<select id="subject"><option value="all">Both subjects</option><option>Mathematics</option><option>Portuguese</option></select></label><label>School<select id="school"><option value="all">Both schools</option><option value="GP">Gabriel Pereira</option><option value="MS">Mousinho da Silveira</option></select></label><label>Support comparison<select id="support"><option value="schoolsup">School support</option><option value="famsup">Family support</option></select></label><button id="reset">Reset filters</button><div class="filter-result"><i aria-hidden="true"></i><span id="filter-status" aria-live="polite"></span></div></section>
-<section class="stats" id="stats"></section>
-<div class="section-heading"><div><p class="eyebrow">THE EXPLORER</p><h2>Five views, one connected picture.</h2></div><span>Hover or focus chart marks for values and sample sizes · The chord diagram and scatterplot matrix are in the <a href="story.html#rising">data story</a></span></div>
-<section class="grid">
-<article class="card" id="v1" data-num="01"><p class="eyebrow">01 / PREVIOUS FAILURES</p><h3>The staircase of achievement</h3><p>Mean final grades form the steps. A figure near the edge illustrates how precarious the next step can feel.</p><div id="failures" class="chart"></div><p class="note">Step heights are observed group means. The person is an illustration; these groups do not track one student falling or predict an individual outcome.</p></article>
-<article class="card" id="v2" data-num="02"><p class="eyebrow">02 / EDUCATIONAL SUPPORT</p><h3>Who receives support?</h3><p>Share of course records with and without support, by context factor count.</p><div id="support-chart" class="chart"></div><p class="note">Support often goes to students already struggling. Differences cannot measure the effect of support.</p></article>
-<article class="card" id="v3" data-num="03"><p class="eyebrow">03 / CONTEXT & BEHAVIOR</p><h3>Two kinds of disadvantage</h3><p>Mean final grade as each kind of factor accumulates.</p><div id="factors" class="chart"></div><p class="note">Each line groups the same records independently. Context and behavior are exploratory categories, not measures of personal responsibility.</p></article>
-<article class="card" id="v4" data-num="04"><p class="eyebrow">04 / A SUPPORT CONVERSATION</p><h3>Where could help begin?</h3><p>An illustrative decision tree: follow the questions from left to right to reach one of eight starting points. Answer Yes or No beside each question to reveal the next one, or tick “Show full tree” to see all eight starting points at once. Counts, mean final grades and pass shares update with the filters.</p><div id="tree" class="tree"></div><p class="note">A transparent discussion aid, not a trained model or validated recommendation. Questions were chosen because they separate groups with clearly different outcomes in this dataset. Every student can request support.</p></article>
-<article class="card wide" id="v5" data-num="05"><p class="eyebrow">05 / CONTEXT AND BEHAVIOR TOGETHER</p><h3>Do the two kinds of disadvantage go together?</h3><p>How records with each context factor count (columns) split across behavior factor counts (rows).</p><div id="behavior-context" class="chart progression"></div><p class="note">Each column sums to 100%: darker cells hold a larger share of that column’s records. Column sample sizes (n) sit above the grid; hover or focus a cell for its count. These are exploratory counts, not validated scales; the pattern is an association and says nothing about causes or personal responsibility.</p></article>
 
+<section class="filters merged-controls" id="explore" aria-label="Filter course records"><div class="filter-heading"><p class="eyebrow">CONTROL PANEL</p><strong>Shape the view</strong></div><label>Subject<select id="subject"><option value="all">Both subjects</option><option>Mathematics</option><option>Portuguese</option></select></label><label>School<select id="school"><option value="all">Both schools</option><option value="GP">Gabriel Pereira</option><option value="MS">Mousinho da Silveira</option></select></label><button id="reset">Reset filters</button><div class="filter-result"><i aria-hidden="true"></i><span id="filter-status" aria-live="polite"></span></div></section>
+<section class="stats merged-stats" id="stats"></section>
+<p class="filter-note">Filters update every chart below. Narrative figures describe all 1,044 course records.</p>
 
+<section class="story-section" id="hook" data-num="01">
+<p class="eyebrow">01 / HOOK</p>
+<h2>Two schools. One shared question.</h2>
+<p class="section-summary">Begin in Portugal’s Alentejo region, where two school communities give this story its setting.</p>
+<article class="card geo-card" id="school-geography">
+<div class="geo-heading"><div><p class="eyebrow">THE PLACES BEHIND THE RECORDS</p><h3>A closer look at where we begin</h3></div><button type="button" id="geo-replay">Replay journey ↻</button></div>
+<div class="geo-layout"><div class="geo-map-wrap"><svg id="school-map" viewBox="0 0 820 560" role="img" aria-label="Animated map locating Gabriel Pereira school in Évora and Mouzinho da Silveira school in Portalegre, Portugal"></svg><div class="geo-map-meta"><span id="geo-map-caption">WESTERN EUROPE</span><span>↑ N</span></div></div>
+<aside class="geo-context"><p class="eyebrow" id="geo-step">01 / FIND THE COUNTRY</p><h4 id="geo-title">Portugal</h4><p id="geo-description">Two secondary schools, in two cities in the Alentejo region. Zoom in to meet the communities behind the data.</p><div class="geo-pop" id="geo-pop"><strong>2</strong><span>schools in the study</span></div><p class="geo-school" id="geo-school">Gabriel Pereira · GP<br>Mouzinho da Silveira · MS</p><p class="geo-footnote" id="geo-footnote">School dots use published GPS coordinates. The map is geographic context, not a map of students’ homes.</p></aside></div>
+<div class="geo-controls" role="group" aria-label="Choose a map view"><button type="button" data-geo="1" aria-pressed="false">01 <span>Portugal</span></button><button type="button" data-geo="2" aria-pressed="false">02 <span>Évora · GP</span></button><button type="button" data-geo="3" aria-pressed="false">03 <span>Portalegre · MS</span></button><button type="button" data-geo="4" aria-pressed="false">04 <span>Both schools</span></button><span id="geo-status" aria-live="polite">The journey starts when the map enters view.</span></div>
+<details class="geo-sources"><summary>Map & population sources</summary><p>School coordinates: Construção Pública’s <a href="https://construcaopublica.gov.pt/pt/escolas/028" target="_blank" rel="noreferrer">Gabriel Pereira</a> and <a href="https://construcaopublica.gov.pt/pt/escolas/027" target="_blank" rel="noreferrer">Mouzinho da Silveira</a> pages. Municipal populations (2021, INE as published by DGAL): <a href="https://www.portalautarquico.dgal.gov.pt/pt-PT/entidades-locais/concelhos/evora/" target="_blank" rel="noreferrer">Évora, 53,591</a>; <a href="https://portalautarquico.dgal.gov.pt/pt-PT/entidades-locais/concelhos/portalegre/" target="_blank" rel="noreferrer">Portalegre, 22,341</a>. These describe whole municipalities, not city-only populations, school enrollment or the historical study cohort. Outlines: <a href="https://github.com/datasets/geo-countries" target="_blank" rel="noreferrer">Natural Earth / geo-countries (public domain)</a> and <a href="https://portalgeo.iniav.pt/arcgis/rest/services/Hosted/Municipios/FeatureServer/4" target="_blank" rel="noreferrer">INIAV municipal boundary service</a>, simplified for display. All geometry is bundled for offline use.</p></details>
+</article>
+<h3 class="geo-bridge">Once we know the setting, what actually separates grades?</h3>
+<p class="section-body">Nursery attendance has only a small relationship with grades (about 0.4 points in mean final grade), family-size groups have medians one point apart and identical middle-50% ranges, and paid classes show no grade advantage (paid-class records average slightly lower). These weak results challenge the assumption that familiar demographic or financial factors automatically identify the students at most risk.</p>
+<div class="story-grid single">
+<article class="card hook-card" id="famsize">
+<p class="eyebrow">FAMILY SIZE · FINAL GRADE</p>
+<h3>Different household sizes, nearly the same grades</h3>
+<p>Final-grade distributions for households of three or fewer people and households of more than three.</p>
+<div id="famsize-box" class="chart boxplot"></div>
+<p class="chart-takeaway" id="famsize-takeaway"></p>
+<p class="note">Boxes show the middle 50%; center lines mark medians; whiskers extend to the most distant values within 1.5 × IQR. Zero grades are retained. Course records combined, n=<span id="famsize-n">1,044</span>; some students appear in both subjects.</p>
+</article>
+</div>
 </section>
-<details class="method"><summary>Methodology & data definitions</summary><div class="method-grid"><div><h3>Context factors · 0–4</h3><p>One point each: no home internet; travel time above 30 minutes (code ≥3); mother's education below secondary (Medu &lt;3); father's education below secondary (Fedu &lt;3).</p></div><div><h3>Behavior factors · 0–4</h3><p>One point each: study time below 2 hours/week; workday alcohol code ≥3; weekend alcohol code ≥3; no stated desire for higher education. These thresholds are project choices, not UCI definitions.</p></div><div><h3>Records, not unique students</h3><p>395 mathematics + 649 Portuguese course records. Some students appear in both subjects. Combined means weight every course record equally; use the subject filter for separate comparisons. Grades run from 0 to 20, with ≥10 treated as passing.</p></div></div><p>All plots include zero grades. Small groups can yield unstable averages. Parental education: 0 none, 1 primary, 2 grades 5–9, 3 secondary, 4 higher. Travel: 1 &lt;15 min, 2 15–30 min, 3 30–60 min, 4 &gt;60 min.</p></details>
-<footer><span>Source: <a href="https://archive.ics.uci.edu/dataset/320/student+performance" target="_blank" rel="noreferrer">Cortez (2008), UCI Student Performance</a> · <a href="https://doi.org/10.24432/C5TG7T">DOI</a> · CC BY 4.0</span><span>Runs locally · No external scripts or fonts</span></footer>
-</main><nav class="dots" aria-label="Jump between charts"><a href="#v1" title="Previous failures" aria-label="Previous failures"></a><a href="#v2" title="Educational support" aria-label="Educational support"></a><a href="#v3" title="Context and behavior factors" aria-label="Context and behavior factors"></a><a href="#v4" title="Support conversation" aria-label="Support conversation"></a><a href="#v5" title="Context and behavior together" aria-label="Context and behavior together"></a></nav><div id="tooltip" role="status" hidden></div><script src="data.js"></script><script src="tree.js"></script><script src="app.js"></script><script src="tips.js"></script></body></html>
+
+<section class="story-section" id="rising" data-num="02">
+<p class="eyebrow">02 / RISING INSIGHTS</p>
+<h2>Goals, access and home context matter more</h2>
+<p class="section-summary">Three indicators show clearer separation, shifting attention from broad demographics toward student circumstances.</p>
+<p class="section-body">Students planning to pursue higher education have higher grades (mean 11.6 vs 8.4), students with home internet average about one point higher (11.6 vs 10.5), and students whose guardian is neither parent average about 1.3 points lower than those with a mother as guardian. These findings narrow the story from broad assumptions to indicators connected with student goals, access, and home context. The chord diagram and scatterplot matrix below let you test the pattern yourself: which disadvantages travel together, and which behaviors go along with a higher final grade.</p>
+<div class="story-grid rising">
+<article class="card wide-card">
+<p class="eyebrow">HIGHER-EDUCATION PLANS</p>
+<h3>How grades flow from G1 to G3</h3>
+<p>Each ribbon follows course records from one grade band to another across G1, G2 and G3. Click the button (or the diagrams) to reveal G1, then G2, then G3. The top diagram covers students who plan higher education, the bottom one those who do not.</p>
+<p id="higher-text"></p>
+<p class="chart-takeaway" id="higher-takeaway"></p>
+<div class="sankey-controls"><button type="button" id="sankey-next"></button><span id="sankey-step" aria-live="polite"></span></div>
+<div id="higher" class="chart progression"></div>
+<p class="note">G1 and G2 are period grades; G3 is the final grade. Bands: below 10 (failing), 10 to 13, 14 and above. Combined course records (n=<span id="higher-n">1,044</span>); heights are shares within each group, so the two diagrams compare fairly even though the no-plans group is much smaller and its flows are less stable. Flows describe groups, not individual students, and show association, not cause.</p>
+</article>
+<article class="card wide-card" id="network"><p class="eyebrow">HOW DISADVANTAGES CONNECT</p><h3>Which disadvantages travel together?</h3><p>Each arc around the circle is a risk factor: context factors on the left, behavior factors on the right and past failure at the bottom. A ribbon joins two factors that occur together more often than chance. Click an arc or ribbon to see its numbers, including how many of those students pass; its records are also selected in the matrix below. Press Esc, click empty space or use Deselect to clear it.</p>
+<div class="scatter-controls"><button id="network-clear" type="button">Clear selection</button><label class="net-threshold">Minimum lift <output id="net-lift-value">1.3×</output><input type="range" id="net-lift" min="1" max="2.5" step="0.1" value="1.3"></label><span id="network-selection" aria-live="polite"></span></div>
+<div id="net-callout"></div><div class="net-layout"><div id="network-chart" class="chart network-chart"></div><aside id="net-detail" class="net-detail net-pop" hidden aria-live="polite" aria-label="Details of the clicked factor or ribbon"></aside></div><div class="legend net-legend"><span><strong>Click an arc or ribbon for details</strong></span><span><svg width="30" height="14" aria-hidden="true"><rect y="10" width="12" height="4" fill="#8a8378"/><rect x="16" y="0" width="14" height="14" fill="#8a8378"/></svg>Arc = one factor; thicker = more connected</span><span><svg width="60" height="12" aria-hidden="true"><defs><linearGradient id="lift-key"><stop offset="0" stop-color="rgb(233,224,230)"/><stop offset="1" stop-color="rgb(96,44,86)"/></linearGradient></defs><path d="M0 5 L60 0 V12 L0 7 Z" fill="url(#lift-key)"/></svg>Ribbon colour &amp; width = lift (1× → 3×+)</span></div><p class="note">Lift 2× = twice as often as chance (pairs with at least 10 shared records). Every factor gets an equal arc length; record counts and pass rates appear in a box when you click it. Arc thickness is the connection score: the sum of (lift − 1) over the ties shown. Ties between the same two groups are bundled together. An association, not a cause.</p></article>
+<article class="card wide-card scatter-card" id="v7"><p class="eyebrow">SCATTERPLOT MATRIX</p><h3>What goes along with a higher final grade?</h3><p>Three behaviors a school can act on: weekly study time, workday alcohol use and absences. Each cell compares the column variable (horizontal axis) with the row variable (vertical axis); the diagonal shows each variable's distribution. Every dot and bar is coloured by final grade, so look for where green gives way to amber. Drag a box in any cell, or click a bar, to select records: the same records keep their colour in every other cell, and everything else turns grey. Selections made in the chord diagram above appear here too. To select several bars at once, click one and Shift-click another in the same histogram: every bar in between is selected. Ctrl/⌘-click (or tick “Add to selection”) adds single bars, and Shift while dragging adds another box. The tall column on the right counts records at each final grade (0 at the bottom, 20 at the top); the selected records are coloured over grey bars for all records, and clicking a grade selects its records in every view.</p>
+<div class="scatter-controls"><button id="matrix-clear" type="button">Clear selection</button><label class="add-toggle"><input type="checkbox" id="matrix-add">Add to selection <span>(or hold Shift)</span></label><label class="add-toggle"><input type="checkbox" id="matrix-failed">Only failed grades <span>(final grade below 10)</span></label><span id="matrix-selection" aria-live="polite"></span></div>
+<div class="matrix-layout"><div class="matrix-scroll"><div id="matrix" class="scatter-matrix"></div></div><aside class="grade-dist-panel" aria-label="Final grade distribution of the selected records"><h4>Final grade distribution</h4><div id="grade-dist" class="grade-dist"></div></aside></div><div class="legend matrix-legend"><span><i style="background:#2f6f4e"></i>Final grade ≥10</span><span><i style="background:#c4841d"></i>Final grade below 10</span><span><i style="background:#d6d1c7"></i>Outside your selection</span><span>Values are whole numbers; dots are spread slightly within each value so overlapping records stay visible. Absences above 30 days (under 1% of records) share the 30+ band. Shift-click selects a range of bars; Ctrl/⌘-click adds one. Press Esc or click empty space to clear.</span></div><p class="note">Study time and alcohol use are ordinal survey codes, not exact quantities; absences is a count of school days missed. Final grade G3 is a separate final assessment, not the average of G1 and G2. Relationships are associations, not evidence of causation.</p></article>
+</div>
+</section>
+
+<section class="story-section" id="main-message" data-num="03">
+<p class="eyebrow">03 / MAIN MESSAGE</p>
+<h2>Past failure marks a concrete group for attention</h2>
+<p class="section-summary">Students with any recorded past failure are far more likely to fall below the passing threshold.</p>
+<p class="section-body" id="failure-body">Among students with any past failure, 55.2% score below 10 and mean G3 is 7.99; among students with no past failure, 15.0% score below 10 and mean G3 is 12.05. Past academic history therefore provides the school board with a concrete group for early attention.</p>
+<div class="stat-band" id="failure-stats"></div>
+<article class="card" id="failures-card">
+<p class="eyebrow">PREVIOUS FAILURES</p>
+<h3>The staircase of achievement</h3>
+<p>Mean final grade by recorded past failures. Step heights follow the observed group means.</p>
+<div id="failures" class="chart"></div>
+<p class="note">Course records, n=<span id="failure-n">1,044</span> (some students appear in both subjects). Groups with few records can produce unstable averages; the illustration is not a prediction about an individual student.</p>
+</article>
+<div class="story-grid">
+<article class="card" id="v3"><p class="eyebrow">CONTEXT &amp; BEHAVIOR</p><h3>Two kinds of disadvantage</h3><p>Mean final grade as each kind of factor accumulates.</p><div id="factors" class="chart"></div><p class="note">Each line groups the same records independently. Context and behavior are exploratory categories, not measures of personal responsibility.</p></article>
+<article class="card wide" id="v5"><p class="eyebrow">CONTEXT AND BEHAVIOR TOGETHER</p><h3>Do the two kinds of disadvantage go together?</h3><p>How records with each context factor count (columns) split across behavior factor counts (rows).</p><div id="behavior-context" class="chart progression"></div><p class="note">Each column sums to 100%: darker cells hold a larger share of that column’s records. Hover or focus a cell for its count. These are exploratory counts, not validated scales.</p></article>
+</div>
+</section>
+
+<section class="story-section" id="solution" data-num="04">
+<p class="eyebrow">04 / SOLUTION</p>
+<h2>Start with prior-failure records</h2>
+<p class="section-summary">The recommendation uses existing records to target outreach, then tests whether the support actually helps.</p>
+<p class="section-body">Use prior-failure records to begin early outreach, assess whether internet access or guardian circumstances create additional needs, offer targeted academic support, and track later outcomes to evaluate whether the support works. The lower observed average among school-support recipients may reflect that support is assigned to students already struggling, not that support harms grades.</p>
+<div class="story-grid solution">
+<article class="card" id="tree-card">
+<p class="eyebrow">A SUPPORT CONVERSATION</p>
+<h3>Where could help begin?</h3>
+<p>An illustrative decision tree: follow the questions from left to right to reach one of eight starting points, each with record counts, mean final grades and pass shares. Answer Yes or No beside each question to reveal the next one. Both answers can be open at once to compare paths; click an open answer again to close its branch, or use Back to undo a step. Tick “Show full tree” to see every path.</p>
+<div id="tree" class="tree"></div>
+<p class="note">A transparent discussion aid, not a trained model or validated recommendation. Every student can request support.</p>
+</article>
+<article class="card" id="support-card">
+<p class="eyebrow">WHO RECEIVES SUPPORT?</p>
+<h3 id="support-title">School support does not follow disadvantage</h3>
+<div class="support-toggle" role="group" aria-label="Type of support"><button type="button" data-support="schoolsup" aria-pressed="true">School support</button><button type="button" data-support="famsup" aria-pressed="false">Family support</button></div>
+<p id="support-text" aria-live="polite"></p>
+<div id="support-chart" class="chart"></div>
+<p class="note" id="support-note"></p>
+</article>
+</div>
+</section>
+
+<footer><span>Source: <a href="https://archive.ics.uci.edu/dataset/320/student+performance" target="_blank" rel="noreferrer">Cortez (2008), UCI Student Performance</a> · CC BY 4.0</span><span>Runs locally · No external scripts or fonts</span></footer>
+</main><div id="tooltip" role="status" hidden></div><script src="data.js"></script><script src="tree.js"></script><script src="linked.js"></script><script src="story.js"></script><script src="geography.js"></script><script src="tips.js"></script></body></html>

@@ -161,3 +161,54 @@ html{overflow-x:clip}   /* the bands are 100vw wide, which includes the scrollba
 #main-message .stat-band .stat span{color:var(--muted)}
 #rising::before,#hook::before,#solution::before{opacity:.07}
 .story footer{margin-top:0;padding-top:28px}
+/* Merged single-page controls */
+.story .header-actions{display:flex;align-items:center;gap:16px}
+.story .header-actions button{border:1px solid var(--story-line);background:var(--story-surface);border-radius:999px;padding:9px 16px;font:inherit;font-size:12px;font-weight:700;color:var(--ink);cursor:pointer}
+.story .header-actions button:hover{background:#f2ede4}
+.story .merged-controls{display:grid;grid-template-columns:minmax(145px,.8fr) repeat(2,minmax(165px,1fr)) auto minmax(145px,.8fr);align-items:end;gap:14px;position:relative;top:auto;margin:34px 0 0;padding:18px 20px;background:var(--story-surface);border:1px solid var(--story-line);border-radius:16px;box-shadow:0 12px 30px rgba(31,42,36,.06)}
+.story .merged-controls .filter-heading{align-self:center;padding-right:8px}
+.story .merged-controls .filter-heading .eyebrow{margin:0 0 2px;color:var(--teal);letter-spacing:1.7px}
+.story .merged-controls .filter-heading strong{font:700 20px/1.15 Georgia,'Times New Roman',serif}
+.story .merged-controls label{display:grid;gap:6px;font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--ink)}
+.story .merged-controls select{min-width:0;width:100%;padding:10px 34px 10px 12px;border:1px solid #c9c0b3;border-radius:9px;background:var(--story-surface);font:inherit;font-weight:650;color:var(--ink)}
+.story .merged-controls #reset{padding:10px 14px;border:1px solid #c9c0b3;border-radius:9px;background:var(--story-surface);font-size:12px;font-weight:700;cursor:pointer}
+.story .merged-controls #reset:hover{background:#f2ede4}
+.story .merged-controls .filter-result{align-self:center;justify-self:end;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.story .merged-controls .filter-result i{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(47,111,78,.12)}
+.story .merged-controls #filter-status{margin:0;color:var(--muted);font-size:11px;font-weight:650}
+.story .merged-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:16px 0 0;padding:22px 24px;background:var(--ink);color:#fff;border:1px solid var(--ink);border-radius:16px;box-shadow:0 20px 44px rgba(31,42,36,.13)}
+.story .merged-stats .stat{padding:2px 20px;border-right:1px solid rgba(255,255,255,.16)}
+.story .merged-stats .stat:first-child{padding-left:0}
+.story .merged-stats .stat:last-child{padding-right:0;border-right:0}
+.story .merged-stats .stat strong{display:block;font-size:clamp(26px,2.3vw,34px);font-weight:700;letter-spacing:-.8px;color:#fff}
+.story .merged-stats .stat span{font-size:11px;letter-spacing:.03em;color:rgba(255,255,255,.68)}
+.filter-note{font-size:11px;color:var(--muted);margin:12px 0 0;max-width:760px}
+@media(max-width:1000px){.story .merged-controls{grid-template-columns:1fr 1fr}.story .merged-controls .filter-heading,.story .merged-controls .filter-result{grid-column:1/-1}.story .merged-controls .filter-result{justify-self:start}}
+@media(max-width:640px){.story .merged-controls{grid-template-columns:1fr;padding:16px}.story .merged-controls .filter-heading,.story .merged-controls .filter-result{grid-column:auto}.story .merged-stats{grid-template-columns:1fr 1fr;padding:18px;gap:14px 0}.story .merged-stats .stat{padding:2px 14px}.story .merged-stats .stat:nth-child(2){border-right:0}.story .merged-stats .stat:nth-child(3){padding-left:0}}
+
+/* Family-size passing line */
+.boxplot .pass-label{font-size:11px;font-weight:700;fill:var(--ink)}
+
+/* Animated staircase figure */
+.stair-stepper{transform-box:fill-box;transform-origin:50% 100%;animation:stair-step 7.5s cubic-bezier(.45,0,.35,1) infinite}
+@keyframes stair-step{
+  0%,8%{transform:translate(0,0);opacity:1}
+  16%{transform:translate(38px,0)}
+  18%{transform:translate(38px,0)}
+  24%{transform:translate(78px,39px)}
+  30%{transform:translate(78px,39px)}
+  38%{transform:translate(157px,39px)}
+  40%{transform:translate(157px,39px)}
+  46%{transform:translate(197px,48px)}
+  52%{transform:translate(197px,48px)}
+  60%{transform:translate(276px,48px)}
+  62%{transform:translate(276px,48px)}
+  68%{transform:translate(316px,55px)}
+  74%{transform:translate(316px,55px)}
+  82%{transform:translate(390px,55px)}
+  94%{transform:translate(390px,55px);opacity:1}
+  96%{transform:translate(390px,55px);opacity:0}
+  99%{transform:translate(0,0);opacity:0}
+  100%{transform:translate(0,0);opacity:1}
+}
+@media(prefers-reduced-motion:reduce){.stair-stepper{animation:none;transform:none}}

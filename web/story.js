@@ -1,8 +1,9 @@
 'use strict';
 const $=id=>document.getElementById(id), teal='#2f6f4e', orange='#c4841d'; // names are historical: teal = pass (green), orange = below 10 (amber)
-let records=[];
+let all=[], records=[];
 const mean=a=>a.length?a.reduce((s,r)=>s+r.G3,0)/a.length:null;
 const context=r=>+(r.internet==='no')+ +(r.traveltime>=3)+ +(r.Medu<3)+ +(r.Fedu<3);
+const behavior=r=>+(r.studytime===1)+ +(r.Dalc>=3)+ +(r.Walc>=3)+ +(r.higher==='no');
 const groups=(fn,n=5)=>Array.from({length:n},(_,i)=>records.filter(r=>fn(r)===i));
 const fmt=n=>n===null?'No records':n.toFixed(1);
 const quantile=(values,p)=>{const i=(values.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return values[lo]+(values[hi]-values[lo])*(i-lo);};
@@ -28,8 +29,9 @@ function familyBoxplot(){
   const boxText=sameBox?`the same middle 50% (${num(gA.q1)} to ${num(gA.q3)})`:`middle 50% of ${num(gA.q1)} to ${num(gA.q3)} versus ${num(gB.q1)} to ${num(gB.q3)}`;
   const famDesc=`Two box plots of final grade by household size: medians of ${num(gA.median)} and ${num(gB.median)}, with ${boxText}.`;
   let svg='<svg viewBox="0 0 720 360" role="img" aria-labelledby="famsize-title famsize-desc"><title id="famsize-title">Final grade by family size</title><desc id="famsize-desc">'+famDesc+'</desc>';
+  svg+='<rect x="72" y="180" width="608" height="112" fill="#c4841d" fill-opacity=".06"/>';
   for(let value=0;value<=20;value+=5){const py=y(value);svg+=`<line x1="72" y1="${py}" x2="680" y2="${py}" stroke="#ded9d0"/><text x="59" y="${py+4}" text-anchor="end">${value}</text>`;}
-  svg+='<text x="72" y="20">Final grade / 20</text><line x1="72" y1="180" x2="680" y2="180" stroke="#8a8378" stroke-dasharray="5 5"/><text x="676" y="173" text-anchor="end">Passing threshold · 10</text>';
+  svg+='<text x="72" y="20">Final grade / 20</text><line x1="72" y1="180" x2="680" y2="180" stroke="#1f2a24" stroke-width="1.6" stroke-dasharray="7 5"/><text class="pass-label" x="80" y="170" text-anchor="start">Passing line: 10</text>';
   cohorts.forEach((group,index)=>{
     const x=centers[index],tip=`${group.label} people; median ${fmt(group.median)}; middle 50% ${fmt(group.q1)} to ${fmt(group.q3)}; n=${group.values.length}`;
     svg+=`<g tabindex="0" data-tip="${tip}" aria-label="${tip}"><title>${tip}</title>`;
@@ -60,7 +62,7 @@ function staircase(){
   const first=mean(cohorts[0]);
   if(first!==null){
     const edge=45+width, top=230-first*10;
-    svg+=`<g role="img" aria-label="Illustration of a person losing balance near the first step edge"><g transform="translate(${edge-10},${top-2}) rotate(14)" fill="none" stroke="${orange}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="-43" r="5" fill="${orange}" stroke="none"/><path d="M3 -35 L-2 -18 L-8 0 M-2 -18 L13 -7 L18 -11 M1 -30 L-13 -39 M1 -30 L17 -36"/></g><text x="${edge+30}" y="${top-38}" fill="${orange}" font-size="10">Illustration</text></g>`;
+    svg+=`<g class="stair-figure" role="img" aria-label="Animated illustration of a person stepping down each step of the staircase"><g transform="translate(125,${top-2})"><g class="stair-stepper" fill="none" stroke="${orange}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="-43" r="5" fill="${orange}" stroke="none"/><path d="M3 -35 L-2 -18 L-8 0 M-2 -18 L13 -7 L18 -11 M1 -30 L-13 -39 M1 -30 L17 -36"/></g></g><text x="${edge+30}" y="${top-38}" fill="${orange}" font-size="10">Illustration</text></g>`;
   }
   svg+='<text x="282" y="276" text-anchor="middle">Recorded past class failures</text></svg>';
   $('failures').innerHTML=legend([['Mean final grade',teal]])+svg;
@@ -107,12 +109,13 @@ function statBand(){
   const any=records.filter(r=>r.failures>0), none=records.filter(r=>r.failures===0);
   const below=a=>100*a.filter(r=>r.G3<10).length/a.length;
   const pct=v=>v.toFixed(1)+'%';
-  $('failure-body').textContent=`Among students with any past failure, ${pct(below(any))} score below 10 and mean G3 is ${mean(any).toFixed(2)}; among students with no past failure, ${pct(below(none))} score below 10 and mean G3 is ${mean(none).toFixed(2)}. Past academic history therefore provides the school board with a concrete group for early attention.`;
+  const avg=a=>a.length?mean(a).toFixed(2):'—';
+  $('failure-body').textContent=`Among students with any past failure, ${pct(below(any))} score below 10 and mean G3 is ${avg(any)}; among students with no past failure, ${pct(below(none))} score below 10 and mean G3 is ${avg(none)}. Past academic history therefore provides the school board with a concrete group for early attention.`;
   $('failure-stats').innerHTML=[
     [any.length?below(any).toFixed(1)+'%':'—','Below 10 · any past failure'],
-    [mean(any).toFixed(2)+' / 20','Mean G3 · any past failure'],
+    [avg(any)+' / 20','Mean G3 · any past failure'],
     [none.length?below(none).toFixed(1)+'%':'—','Below 10 · no past failure'],
-    [mean(none).toFixed(2)+' / 20','Mean G3 · no past failure']
+    [avg(none)+' / 20','Mean G3 · no past failure']
   ].map(([n,l])=>`<div class="stat"><strong>${n}</strong><span>${l}</span></div>`).join('');
 }
 
@@ -212,6 +215,46 @@ function supportChart(key){
 }
 document.addEventListener('click',e=>{const b=e.target.closest('.support-toggle button');if(b)supportChart(b.dataset.support);});
 
+function behaviorByContext(){
+  const left=70,top=34,cw=90,ch=39,levels=[0,1,2,3,4];
+  let s=svgStart('Heatmap of behavior factor count shares within each context factor count','Behavior factor count (each column sums to 100%)');
+  groups(context).forEach((rows,i)=>{
+    const x=left+i*cw,total=rows.length;
+    s+=`<text x="${x+cw/2}" y="${top+levels.length*ch+18}" text-anchor="middle">${i}</text><text x="${x+cw/2}" y="28" text-anchor="middle">n=${total}</text>`;
+    if(!total){s+=`<text x="${x+cw/2}" y="${top+levels.length*ch/2}" text-anchor="middle">No records</text>`;return;}
+    levels.forEach(level=>{
+      const n=rows.filter(r=>behavior(r)===level).length,pct=100*n/total,y=top+(4-level)*ch;
+      s+=mark('rect',`x="${x+1}" y="${y+1}" width="${cw-2}" height="${ch-2}" rx="3" fill="${teal}" fill-opacity="${(.06+.94*pct/100).toFixed(3)}" stroke="#e4ded2"`,`${i} context factors, ${level} behavior factors: ${pct.toFixed(1)}% of that group (${n} of ${total} course records)`);
+      s+=`<text x="${x+cw/2}" y="${y+ch/2+4}" text-anchor="middle" style="fill:${pct>=50?'#fff':'#1f2a24'};font-weight:600;pointer-events:none">${pct.toFixed(0)}%</text>`;
+    });
+  });
+  levels.forEach(level=>s+=`<text x="${left-10}" y="${top+(4-level)*ch+ch/2+4}" text-anchor="end">${level}</text>`);
+  s+='<text x="'+(left+cw*2.5)+'" y="276" text-anchor="middle">Context factor count</text></svg>';
+  $('behavior-context').innerHTML=`<div class="legend"><span>Share of records in each column</span><span style="display:inline-flex;align-items:center;gap:6px">0%<i style="width:110px;height:10px;border-radius:2px;margin:0;background:linear-gradient(to right,rgba(47,111,78,.06),${teal})"></i>100%</span></div>`+s;
+}
+
+function updateStats(){
+  const pass=records.filter(r=>r.G3>=10).length,net=records.filter(r=>r.internet==='yes').length;
+  $('stats').innerHTML=[[records.length.toLocaleString(),'Course records'],[fmt(mean(records))+' / 20','Mean final grade'],[records.length?(100*pass/records.length).toFixed(1)+'%':'—','Final grade ≥10'],[records.length?(100*net/records.length).toFixed(1)+'%':'—','Internet at home']].map(([n,l])=>`<div class="stat"><strong>${n}</strong><span>${l}</span></div>`).join('');
+  $('filter-status').textContent=`${records.length} records in this view`;
+  const n=records.length.toLocaleString();
+  for(const id of ['famsize-n','higher-n','failure-n']){const el=$(id);if(el)el.textContent=n;}
+}
+
+function applyFilters(){
+  const subject=$('subject').value, school=$('school').value;
+  records=all.filter(r=>(subject==='all'||r.subject===subject)&&(school==='all'||r.school===school));
+  updateStats();
+  render();
+}
+
+function exportCsv(){
+  const keys=Object.keys(all[0]),quote=v=>'"'+String(v).replaceAll('"','""')+'"';
+  const csv=[keys.map(quote).join(','),...records.map(r=>keys.map(k=>quote(r[k])).join(','))].join('\r\n');
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');
+  a.href=url;a.download='school-success-filtered.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
 function render(){
   familyBoxplot();
   staircase();
@@ -219,6 +262,8 @@ function render(){
   supportChart(currentSupport);
   higherSankey();
   tree();
+  lines('factors',['0','1','2','3','4'],[{name:'Context factors',color:teal,values:groups(context)},{name:'Behavior factors',color:orange,values:groups(behavior)}],'Final grade by factor count','Factor count');
+  behaviorByContext();
   if(window.drawLinkedViews)window.drawLinkedViews(records);
 }
 
@@ -236,4 +281,10 @@ document.addEventListener('focusin',tip);
 document.addEventListener('pointerout',()=>{$('tooltip').hidden=true;});
 document.addEventListener('focusout',()=>{$('tooltip').hidden=true;});
 
-try{records=window.SCHOOL_DATA;render();}catch(e){document.querySelector('.intro-note').textContent='Data could not be loaded';}
+try{
+  all=window.SCHOOL_DATA;
+  for(const id of ['subject','school'])$(id).addEventListener('change',applyFilters);
+  $('reset').onclick=()=>{$('subject').value='all';$('school').value='all';applyFilters();};
+  $('export').onclick=exportCsv;
+  applyFilters();
+}catch(e){document.querySelector('.intro-note').textContent='Data could not be loaded';}

@@ -4,7 +4,7 @@ An offline dashboard and four-part data story built from the UCI Student Perform
 
 ## Click and run
 
-Open `web/index.html` directly in any modern browser; no server, installation, or internet connection is required. Use **Data story** in the header to open the narrative view, or open `web/story.html` directly. The browser-ready `web/data.js` is generated from the same 1,044 records as `web/data.json`.
+Open `web/index.html` directly in any modern browser; no server, installation, or internet connection is required. The narrative and the interactive explorer now share one page. The browser-ready `web/data.js` is generated from the same 1,044 records as `web/data.json`.
 
 For local development with clean URLs, run `python app.py --port 8765` and open `http://127.0.0.1:8765`.
 

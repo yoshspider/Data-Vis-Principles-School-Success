@@ -17,7 +17,7 @@ def main():
     handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(root / 'web'))
     with http.server.ThreadingHTTPServer(('127.0.0.1', args.port), handler) as server:
         url = f'http://127.0.0.1:{server.server_port}'
-        start_url = f'{url}/story.html'
+        start_url = f'{url}/'
         print(f'School Success Explorer: {start_url}\nClose this window or press Ctrl+C to stop.', flush=True)
         if not args.no_browser:
             threading.Timer(0.5, webbrowser.open, args=(start_url,)).start()
