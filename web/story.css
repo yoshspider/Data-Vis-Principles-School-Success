@@ -134,3 +134,30 @@ html{scroll-behavior:smooth}
 @keyframes story-chart-in{from{opacity:.35}to{opacity:1}}
 @media(max-width:760px){.geo-layout{grid-template-columns:1fr}.geo-context{border-left:0;border-top:1px solid var(--story-line);padding:22px}.geo-context h4{min-height:0;font-size:31px}.geo-context .geo-school{min-height:0}#school-map{min-height:320px;max-height:420px}.geo-heading{align-items:flex-start}.geo-heading h3{font-size:23px!important}.geo-pop{margin-top:0}.geo-controls button{flex:1;min-width:100px}.geo-heading button{padding:7px 9px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.story-reveal{opacity:1;transform:none;transition:none}#support-chart svg{animation:none}.geo-municipality{transition:none}}
+
+/* Section bands: each part of the story gets its own full-bleed ground, like the example projects.
+   The band runs edge to edge while the text keeps the column width of main. */
+body.story{--band-cover:#1f3d2f;--band-hook:#e3e9dc;--band-rising:#f2e6d0;--band-main:#1f2a24;--band-solution:#e5efe6;--on-dark:#f4f0e8;--on-dark-muted:#cfd6cb}
+html{overflow-x:clip}   /* the bands are 100vw wide, which includes the scrollbar; clip the sliver */
+.story .cover,.story-section{margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding-left:calc(50vw - 50%);padding-right:calc(50vw - 50%)}
+.story-section{border-top:0}
+.story .cover{max-width:none;background:var(--band-cover);color:var(--on-dark)}
+.story .cover>*{max-width:980px}
+.story .cover h1,.story .cover .byline{color:var(--on-dark)}
+.story .cover .lead,.story .cover .intro-note{color:var(--on-dark-muted)}
+.story .cover>.eyebrow,.scroll-cue{color:#a8d1b4}
+.cover::after{color:#fff;opacity:.05}
+#hook{background:var(--band-hook)}
+#rising{background:var(--band-rising)}
+#main-message{background:var(--band-main);color:var(--on-dark)}
+#solution{background:var(--band-solution)}
+#main-message h2,#main-message .section-summary{color:var(--on-dark)}
+#main-message .section-body,#main-message>.eyebrow{color:var(--on-dark-muted)}
+#main-message::before{color:#fff;opacity:.06}
+#main-message .card{color:var(--ink)}
+#main-message .stat-band{background:var(--story-surface);border-color:var(--story-surface);color:var(--ink);box-shadow:none}
+#main-message .stat-band .stat{border-color:var(--story-line)}
+#main-message .stat-band .stat strong{color:var(--ink)}
+#main-message .stat-band .stat span{color:var(--muted)}
+#rising::before,#hook::before,#solution::before{opacity:.07}
+.story footer{margin-top:0;padding-top:28px}

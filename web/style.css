@@ -207,3 +207,10 @@ button.tip-close{position:absolute;top:6px;right:8px;border:0;border-radius:6px;
 button.tip-close:hover{color:#fff;background:rgba(255,255,255,.12)}
 .card h3.has-tip,.explorer .grid>.card>h3.has-tip{position:relative;z-index:9}
 @media(prefers-reduced-motion:reduce){.card button.tip-button{animation:none}}
+
+/* Explorer: each view sits on its own tint, in the same order as the story's bands */
+.explorer .grid>#v1{background:#e3e9dc}
+.explorer .grid>#v2{background:#f2e6d0}
+.explorer .grid>#v3{background:var(--explore-surface)}
+.explorer .grid>#v4{background:#e5efe6}
+.explorer .grid>#v5{background:#efe6d6}
