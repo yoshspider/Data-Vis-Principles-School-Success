@@ -88,6 +88,10 @@ function addTip(card, text) {
   anchor.append(button, pop);
   heading.classList.add('has-tip');          // lifts the title above the paragraph under it, so the pop-up is not covered
   heading.appendChild(anchor);
+  // A title that the page rewrites (the support card swaps its text on toggle) drops the
+  // button with the old text; put it back whenever that happens.
+  new MutationObserver(() => { if (!heading.contains(anchor)) heading.appendChild(anchor); })
+    .observe(heading, {childList: true});
 
   const open = () => {
     closeTips(anchor);
