@@ -64,15 +64,22 @@ body.story{--story-paper:#f4f0e8;--story-surface:#fffdf8;--story-line:#d8d1c5;ba
 .support-toggle button{border:0;background:transparent;padding:8px 18px;font:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;border-radius:0}
 .support-toggle button[aria-pressed="true"]{background:var(--ink);color:#fff}
 .support-toggle button:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
-.matrix-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}
-.grade-dist-panel{position:sticky;top:84px;padding:16px;border:1px solid var(--story-line);border-radius:12px;background:#fff}
-.grade-dist-panel h4{margin:0 0 6px;font-size:15px;color:var(--ink)}
-.grade-dist svg{width:100%;height:auto;display:block}
+.matrix-layout{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:14px;align-items:start}
+.grade-dist-panel{position:relative;padding:0}
+.grade-dist-panel h4{position:absolute;top:0;left:0;right:0;margin:0;font-size:13px;line-height:1.3;color:var(--ink);text-align:right}
+.grade-dist svg{display:block;max-width:100%}
+.grade-dist text.dist-major{font-weight:600;fill:var(--ink)}
 .grade-dist text{font:10px 'Segoe UI',sans-serif;fill:var(--muted)}
 .dist-summary{margin:0 0 6px;font-size:12px;line-height:1.5;color:var(--ink)}
-.dist-note{margin:6px 0 0;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
-.dist-note i{width:18px;border-top:2px dashed #475569;display:inline-block}
-@media(max-width:1000px){.matrix-layout{grid-template-columns:1fr}.grade-dist-panel{position:static}}
+.dist-note{margin:4px 0 0;font-size:11px;color:var(--muted)}
+.grade-dist .dist-base{fill-opacity:.85}
+.grade-dist .has-selection .dist-base{fill:#cbd5e1;fill-opacity:.7}
+.grade-dist .dist-sel{fill-opacity:.95}
+.grade-dist .dist-row{fill:var(--ink);fill-opacity:0;cursor:pointer;outline:none}
+.grade-dist .dist-row:hover{fill-opacity:.06}
+.grade-dist .dist-row:focus-visible{stroke:var(--ink);stroke-width:2}
+.grade-dist .dist-row.is-selected{stroke:var(--ink);stroke-width:1.5;stroke-dasharray:3 2}
+@media(max-width:1000px){.matrix-layout{grid-template-columns:1fr}.grade-dist-panel h4{position:static;text-align:left;margin-bottom:6px}.grade-dist{max-width:220px}}
 .sankey-controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 12px}
 .sankey-controls button{border:0;border-radius:999px;padding:9px 20px;background:var(--ink);color:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .sankey-controls button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}

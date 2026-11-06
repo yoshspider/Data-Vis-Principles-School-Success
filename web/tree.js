@@ -2,8 +2,10 @@
 // Support-conversation tree shared by the explorer and the data story. It is a hand-written
 // discussion aid: each question was chosen because it separates groups with clearly different
 // final-grade outcomes in this dataset, not fitted as a predictive model.
-// By default it is walked one question at a time: answering Yes or No draws the branch and reveals
-// the next box. "Show full tree" reveals every path at once.
+// By default it is explored one question at a time: answering Yes or No draws that branch and reveals
+// the next box. Both answers of a question can be open at once, so several paths can be compared;
+// clicking an open answer again closes its branch, and Back undoes the last step.
+// "Show full tree" reveals every path at once.
 (function () {
   const TEAL = '#2563a6', ORANGE = '#c46743', PASS_GRADE = 10;
   const W = 1120, ROW = 84, TOP = 34, Q_W = 164, Q_H = 72, LEAF_W = 240, LEAF_H = 72, LEAF_X = W - LEAF_W - 6;
@@ -41,7 +43,8 @@
     }
   };
 
-  // Walk state per container, kept across re-renders so a filter change does not reset the walk.
+  // Open boxes and the undo history per container, kept across re-renders so a filter change does
+  // not reset the exploration. Box ids are paths such as 'r.y.n', so a branch's boxes share its prefix.
   const states = new Map();
 
   const esc = text => String(text).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c]);
@@ -72,7 +75,7 @@
   }
 
   const leafKeys = node => node.leaves.join(' ');
-  const shown = (id, state) => state.full || state.path.includes(id) ? ' is-shown' : '';
+  const shown = (id, state) => state.full || state.open.includes(id) ? ' is-shown' : '';
   const passBar = (x, y, width, node) => {
     if (!node.n) return `<rect x="${x}" y="${y}" width="${width}" height="6" rx="3" fill="#e2e8f0"/>`;
     const split = round(width * node.pass);
@@ -92,7 +95,7 @@
 
   // Yes sits above the branch start and No below it, beside the box's right edge.
   function answerPill(node, answer, state) {
-    const target = childId(node.id, answer), isChosen = !state.full && state.path.includes(target);
+    const target = childId(node.id, answer), isChosen = !state.full && state.open.includes(target);
     const y = answer === 'Yes' ? Q_H / 2 - PILL_H - PILL_GAP - 8 : Q_H / 2 + PILL_GAP + 8;
     const label = `Answer ${answer}: ${node.q.join(' ')}`;
     return `<g class="tree-pill${isChosen ? ' is-chosen' : ''}" data-parent="${node.id}" data-target="${target}" role="button" tabindex="0" aria-pressed="${isChosen}" aria-label="${esc(label)}" transform="translate(${Q_W + 5},${y})">`
@@ -120,39 +123,60 @@
   }
 
   function statusText(state, nodes) {
-    if (state.full) return `Showing all ${nodes.filter(n => n.isLeaf).length} starting points. Point at any box or branch to trace its paths.`;
-    const last = nodes.find(n => n.id === state.path[state.path.length - 1]);
-    if (last.isLeaf) return `Suggested starting point: <strong>${esc(last.title)}</strong> · ${esc(last.detail)} · ${statText(last)}`;
-    return `Step ${state.path.length}: choose <strong>Yes</strong> or <strong>No</strong> beside “${esc(last.q.join(' '))}”`;
+    const leaves = nodes.filter(n => n.isLeaf);
+    if (state.full) return `Showing all ${leaves.length} starting points. Point at any box or branch to trace its paths.`;
+    const last = nodes.find(n => n.id === state.last) || nodes[0];
+    const reached = leaves.filter(n => state.open.includes(n.id)).length;
+    const count = reached ? ` · ${reached} of ${leaves.length} starting points open` : '';
+    if (last.isLeaf) return `Starting point: <strong>${esc(last.title)}</strong> · ${esc(last.detail)} · ${statText(last)}${count}`;
+    return `Choose <strong>Yes</strong> or <strong>No</strong> beside “${esc(last.q.join(' '))}”${count}`;
   }
 
-  // Shows exactly the boxes and branches on the current path (or everything in full mode),
-  // updating classes in place so CSS transitions animate the change.
+  // Shows exactly the open boxes and branches (or everything in full mode), updating classes in
+  // place so CSS transitions animate the change.
   function applyState(container, state) {
     const svg = container.querySelector('.tree-svg');
     if (!svg) return;
     svg.classList.toggle('is-full', state.full);
-    svg.querySelectorAll('[data-node]').forEach(el => el.classList.toggle('is-shown', state.full || state.path.includes(el.dataset.node)));
+    svg.querySelectorAll('[data-node]').forEach(el => el.classList.toggle('is-shown', state.full || state.open.includes(el.dataset.node)));
     svg.querySelectorAll('.tree-pill').forEach(pill => {
-      const isChosen = !state.full && state.path.includes(pill.dataset.target);
+      const isChosen = !state.full && state.open.includes(pill.dataset.target);
       pill.classList.toggle('is-chosen', isChosen);
       pill.setAttribute('aria-pressed', isChosen);
     });
     if (!state.full) highlight(svg, null);
     container.querySelector('.tree-status').innerHTML = statusText(state, state.nodes);
     container.querySelector('.tree-full-toggle').checked = state.full;
+    container.querySelector('.tree-back').disabled = state.full || !state.history.length;
   }
 
-  // Answering keeps the path up to the question and adds the chosen branch, so changing an
-  // earlier answer drops everything that followed it.
-  function choose(container, pill) {
-    const state = states.get(container), at = state.path.indexOf(pill.dataset.parent);
-    if (state.full || at < 0 || state.path[at + 1] === pill.dataset.target) return;
-    const next = {...state, path: [...state.path.slice(0, at + 1), pill.dataset.target]};
+  // Every change saves the previous open boxes so Back can restore them.
+  function update(container, changes) {
+    const state = states.get(container);
+    const next = {...state, ...changes, history: [...state.history, {open: state.open, last: state.last}]};
     states.set(container, next);
     applyState(container, next);
-    const reached = container.querySelector(`[data-node="${pill.dataset.target}"]:not(.tree-link) .tree-pop`);
-    if (reached && pill.matches(':focus-visible')) reached.focus();
+  }
+
+  // An answer opens its branch; answering again closes that branch and everything below it.
+  function choose(container, pill) {
+    const state = states.get(container), {parent, target} = pill.dataset;
+    if (state.full || !state.open.includes(parent)) return;
+    const isOpen = state.open.includes(target);
+    update(container, isOpen
+      ? {open: state.open.filter(id => id !== target && !id.startsWith(`${target}.`)), last: parent}
+      : {open: [...state.open, target], last: target});
+    const reached = container.querySelector(`[data-node="${target}"]:not(.tree-link) .tree-pop`);
+    if (!isOpen && reached && pill.matches(':focus-visible')) reached.focus();
+  }
+
+  function back(container) {
+    const state = states.get(container);
+    if (state.full || !state.history.length) return;
+    const previous = state.history[state.history.length - 1];
+    const next = {...state, ...previous, history: state.history.slice(0, -1)};
+    states.set(container, next);
+    applyState(container, next);
   }
 
   // Hovering or focusing any box or branch in the full tree highlights every path through it.
@@ -174,11 +198,8 @@
     container.addEventListener('click', event => {
       const pill = pickPill(event);
       if (pill) return choose(container, pill);
-      if (event.target.closest('.tree-restart')) {
-        const next = {...states.get(container), path: [ROOT], full: false};
-        states.set(container, next);
-        applyState(container, next);
-      }
+      if (event.target.closest('.tree-back')) return back(container);
+      if (event.target.closest('.tree-restart')) update(container, {open: [ROOT], last: ROOT, full: false});
     });
     container.addEventListener('keydown', event => {
       const pill = pickPill(event);
@@ -197,7 +218,7 @@
 
   function drawSupportTree(container, rows) {
     if (!states.has(container)) {
-      states.set(container, {path: [ROOT], full: false});
+      states.set(container, {open: [ROOT], last: ROOT, history: [], full: false});
       listen(container);
     }
     const {nodes, nextRow} = layout(TREE, rows, 0, 0, null, null, ROOT);
@@ -209,7 +230,7 @@
     const boxes = nodes.map(n => n.isLeaf ? leafBox(n, state) : questionBox(n, state)).join('');
     const heads = `<text class="tree-head" x="${COLUMN_X[0]}" y="16">QUESTIONS TO ASK</text><text class="tree-head" x="${LEAF_X}" y="16">WHERE HELP COULD BEGIN</text>`;
     const controls = `<div class="tree-controls"><label class="tree-toggle"><input type="checkbox" class="tree-full-toggle">Show full tree</label>`
-      + `<button type="button" class="tree-restart">Start over</button><p class="tree-status" aria-live="polite"></p></div>`;
+      + `<button type="button" class="tree-back">← Back</button><button type="button" class="tree-restart">Start over</button><p class="tree-status" aria-live="polite"></p></div>`;
     const legend = `<div class="tree-legend"><span><svg width="34" height="6" aria-hidden="true"><rect width="34" height="6" rx="3" fill="${ORANGE}"/><rect width="24" height="6" rx="3" fill="${TEAL}"/></svg>Share reaching a final grade ≥10 (blue) or not (orange)</span><span><svg width="34" height="12" aria-hidden="true"><path d="M0 6 H34" stroke="#cbd5e1" stroke-width="8"/></svg>Branch width = records on that path</span></div>`;
     container.innerHTML = controls + legend
       + `<div class="tree-scroll"><svg class="tree-svg${state.full ? ' is-full' : ''}" viewBox="0 0 ${W} ${height}" role="group" aria-label="Support conversation tree with ${nextRow} suggested starting points">${heads}<g class="tree-links">${links}</g>${boxes}</svg></div>`;

@@ -132,6 +132,7 @@ function matrix() {
 // A record is selected when it falls inside any box, bar, factor or factor pair in the list (union).
 const inBrush = (r, b) => {
   if (b.type === 'bar') return valueOf(r, b.key) === b.value;
+  if (b.type === 'grade') return r.G3 === b.value;
   if (b.type === 'factor') return factorByKey[b.key].test(r);
   if (b.type === 'pair') return factorByKey[b.a].test(r) && factorByKey[b.b].test(r);
   const x = jittered(r, b.xKey), y = jittered(r, b.yKey);
@@ -157,35 +158,65 @@ function drawBrushes(svg) {
 }
 
 
-// Final-grade distribution for the current selection (all records when nothing is selected).
-// Bars are shares of the selected records; the grey step line is the share across all records.
+// Final-grade histogram beside the matrix, drawn like the matrix's diagonal histograms: bars count
+// every record (grey once something is selected) with the selected records on top in blue / orange.
+// Each grade row is clickable and selects those records across the linked views.
+// It stands as a tall column: grade 0 level with the bottom row of cells and 20 level with the top
+// row, axis on the right and bars growing left. It is drawn in screen pixels so it can line up with
+// the matrix, and is redrawn on resize.
+const DIST_FALLBACK_H = 420, DIST_AXIS = 26, DIST_LEFT = 4, DIST_FOOT = 16;
+
+// Top and height (in pixels, relative to the chart container) that match the matrix cells; when the
+// panel sits below the matrix on narrow screens, a fixed height is used instead.
+function distFrame(el) {
+  const matrixSvg = $('matrix').querySelector('svg');
+  const box = el.getBoundingClientRect(), size = OFFSET + matrixVariables.length * CELL;
+  if (!matrixSvg) return {top: 4, height: DIST_FALLBACK_H};
+  const m = matrixSvg.getBoundingClientRect(), scale = m.height / size;
+  const top = m.top + (OFFSET + 3) * scale - box.top, bottom = m.top + (size - 3) * scale - box.top;
+  const isBeside = m.right <= box.left && top >= 0 && bottom - top > 200;
+  return isBeside ? {top, height: bottom - top} : {top: 4, height: DIST_FALLBACK_H};
+}
+
+// Roughly three gridlines whatever the counts are.
+const niceStep = max => [5, 10, 20, 25, 50, 100, 200, 250, 500].find(step => max / step <= 4) || 1000;
+const isSameGrade = (b, g) => b.type === 'grade' && b.value === g;
+
 function drawGradeDist(selected, hasSelection) {
   const el = $('grade-dist');
   if (!el) return;
-  const rows = hasSelection ? selected : matrixRows, base = matrixRows;
-  if (!rows.length) { el.innerHTML = '<p class="dist-summary">No records selected.</p>'; return; }
-  const W = 300, H = 250, L = 34, R = 8, T = 30, B = 40, pw = W - L - R, ph = H - T - B, bw = pw / 21;
+  const rows = matrixRows;
+  if (!rows.length) { el.innerHTML = '<p class="dist-summary">No records in this view.</p>'; return; }
+  const focusedGrade = document.activeElement && document.activeElement.closest && document.activeElement.closest('.dist-row');
+  el.innerHTML = '';
+  const {top: T, height: ph} = distFrame(el);
+  const W = el.clientWidth || 170, H = T + ph + DIST_FOOT, axis = W - DIST_AXIS, pw = axis - DIST_LEFT, bh = ph / 21;
   const tally = a => { const c = Array(21).fill(0); a.forEach(r => c[r.G3]++); return c; };
-  const c = tally(rows), cb = tally(base);
-  const s = c.map(v => 100 * v / rows.length), sb = cb.map(v => 100 * v / (base.length || 1));
-  const top = Math.max(...s, ...(hasSelection ? sb : [0]));
-  const step = top > 20 ? 10 : 5, max = Math.max(step, Math.ceil(top / step) * step);
-  const x = g => L + g * bw, y = v => T + ph - v / max * ph;
-  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Final grade distribution of ${rows.length} ${hasSelection ? 'selected' : ''} course records">`;
-  for (let v = 0; v <= max; v += step) svg += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#e2e8f0"/><text x="${L - 5}" y="${y(v) + 3}" text-anchor="end">${v}%</text>`;
-  s.forEach((v, g) => {
-    const tip = `Final grade ${g}: ${c[g]} of ${rows.length} ${hasSelection ? 'selected' : ''} records (${v.toFixed(1)}%); ${sb[g].toFixed(1)}% of all records`;
-    svg += `<rect x="${(x(g) + 1).toFixed(1)}" y="${y(v).toFixed(1)}" width="${(bw - 2).toFixed(1)}" height="${(T + ph - y(v)).toFixed(1)}" fill="${g >= PASS_GRADE ? teal : orange}" fill-opacity=".85" data-tip="${tip}"/>`;
-    svg += `<rect x="${x(g).toFixed(1)}" y="${T}" width="${bw.toFixed(1)}" height="${ph}" fill="transparent" data-tip="${tip}"/>`;
+  const all = tally(rows), sel = tally(selected);
+  const step = niceStep(Math.max(1, ...all)), max = Math.max(step, Math.ceil(Math.max(1, ...all) / step) * step);
+  const rowTop = g => T + (20 - g) * bh, x = n => axis - n / max * pw, gradeFill = g => g >= PASS_GRADE ? teal : orange;
+  const bar = (g, n, fill, cls) => n ? `<rect class="${cls}" x="${x(n).toFixed(1)}" y="${(rowTop(g) + 1).toFixed(1)}" width="${(axis - x(n)).toFixed(1)}" height="${Math.max(1, bh - 2).toFixed(1)}" fill="${fill}"/>` : '';
+  let svg = `<svg class="${hasSelection ? 'has-selection' : ''}" width="${W}" height="${H.toFixed(0)}" viewBox="0 0 ${W} ${H.toFixed(1)}" role="group" aria-label="Final grade distribution; click a grade to select its records">`;
+  for (let n = step; n <= max; n += step) svg += `<line x1="${x(n)}" x2="${x(n)}" y1="${T}" y2="${T + ph}" stroke="#e2e8f0"/><text x="${n === max ? 0 : x(n)}" y="${T + ph + 12}" text-anchor="${n === max ? 'start' : 'middle'}">${n}</text>`;
+  all.forEach((n, g) => {
+    svg += bar(g, n, gradeFill(g), 'dist-base') + (hasSelection ? bar(g, sel[g], gradeFill(g), 'dist-sel') : '');
+    const isSelected = matrixBrushes.some(b => isSameGrade(b, g));
+    const tip = `Final grade ${g}: ${n} course records${hasSelection ? `, ${sel[g]} of them selected` : ''}. Click or press Enter to select them.`;
+    svg += mark('rect', `class="dist-row${isSelected ? ' is-selected' : ''}" data-grade="${g}" aria-pressed="${isSelected}" x="${DIST_LEFT}" y="${rowTop(g).toFixed(1)}" width="${axis - DIST_LEFT}" height="${bh.toFixed(1)}"`, tip, false);
   });
-  if (hasSelection) svg += `<path d="${sb.map((v, g) => `${g ? 'H' : 'M'}${(x(g) + (g ? 0 : 0)).toFixed(1)}${g ? '' : ',' + y(v).toFixed(1)}${g ? ' V' + y(v).toFixed(1) : ''}`).join('')}H${x(21)}" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="3 2"/>`;
-  svg += `<line x1="${x(10)}" x2="${x(10)}" y1="${T - 6}" y2="${T + ph}" stroke="#64748b" stroke-dasharray="4 3"/><text x="${x(10) + 4}" y="${T - 9}">Pass · 10</text>`;
-  [0, 5, 10, 15, 20].forEach(g => svg += `<text x="${(x(g) + bw / 2).toFixed(1)}" y="${T + ph + 14}" text-anchor="middle">${g}</text>`);
-  svg += `<text x="${L + pw / 2}" y="${H - 6}" text-anchor="middle">Final grade (G3)</text></svg>`;
-  const pass = rows.filter(r => r.G3 >= PASS_GRADE).length, high = rows.filter(r => r.G3 >= 14).length;
-  const summary = `${hasSelection ? `${rows.length.toLocaleString()} selected` : `All ${rows.length.toLocaleString()}`} · mean ${fmt(mean(rows))} · ${(100 * (rows.length - pass) / rows.length).toFixed(0)}% below 10 · ${(100 * high / rows.length).toFixed(0)}% at 14+`;
-  const key = hasSelection ? '<p class="dist-note"><i></i>Dashed line: all records</p>' : '';
-  el.innerHTML = `<p class="dist-summary">${summary}</p>${svg}${key}`;
+  svg += `<line x1="${axis}" x2="${axis}" y1="${T}" y2="${T + ph}" stroke="#94a3b8"/>`;
+  [0, 5, 10, 15, 20].forEach(g => svg += `<text class="${g % 10 ? '' : 'dist-major'}" x="${axis + 5}" y="${(rowTop(g) + bh / 2 + 4).toFixed(1)}">${g}</text>`);
+  svg += `<text x="${axis}" y="${T + ph + 12}" text-anchor="middle">0</text></svg>`;
+  const shown = hasSelection ? selected : rows;
+  const pass = shown.filter(r => r.G3 >= PASS_GRADE).length, high = shown.filter(r => r.G3 >= 14).length;
+  const summary = shown.length
+    ? `<strong>${hasSelection ? `${shown.length.toLocaleString()} selected` : `All ${shown.length.toLocaleString()}`}</strong> · mean ${fmt(mean(shown))}<br>${(100 * (shown.length - pass) / shown.length).toFixed(0)}% below 10 · ${(100 * high / shown.length).toFixed(0)}% at 14+`
+    : '<strong>0 selected</strong>';
+  el.innerHTML = `${svg}<p class="dist-summary">${summary}</p><p class="dist-note">Records per grade · click a grade to select</p>`;
+  if (focusedGrade) {
+    const again = el.querySelector(`.dist-row[data-grade="${focusedGrade.dataset.grade}"]`);
+    if (again) again.focus();
+  }
 }
 
 function updateMatrixSelection() {
@@ -218,10 +249,13 @@ function scheduleSelectionUpdate() {
 
 function setMatrixBrushes(brushes) {
   matrixBrushes = brushes;
+  // Once the selection is cleared, a Shift-click starts a fresh range rather than reaching back.
+  if (!brushes.length) rangeAnchor = null;
   scheduleSelectionUpdate();
 }
 
-// Shift, Ctrl/Cmd or the "Add to selection" checkbox keep earlier boxes and bars.
+// Shift, Ctrl/Cmd or the "Add to selection" checkbox keep earlier boxes and bars (Shift on a bar
+// selects a whole range; see selectRange).
 const isAdding = event => event.shiftKey || event.ctrlKey || event.metaKey || $('matrix-add').checked;
 
 function cellPoint(cell, event) {
@@ -269,7 +303,27 @@ function toggleBrush(brush, event) {
   }
 }
 
-const selectBar = (bar, event) => toggleBrush({type: 'bar', key: bar.dataset.key, value: +bar.dataset.value}, event);
+// Shift-click on a bar selects every bar between it and the last bar clicked in the same histogram,
+// added to the current selection. Without an earlier bar there, Shift adds just that bar.
+let rangeAnchor = null;
+
+function selectRange(kind, key, value, makeBrush, event) {
+  const anchor = rangeAnchor;
+  if (event.shiftKey && anchor && anchor.kind === kind && anchor.key === key && anchor.value !== value) {
+    const [lo, hi] = [anchor.value, value].sort((a, b) => a - b);
+    const range = Array.from({length: hi - lo + 1}, (_, i) => makeBrush(lo + i));
+    setMatrixBrushes([...matrixBrushes.filter(b => !range.some(r => sameBrush(r, b))), ...range]);
+    return;
+  }
+  rangeAnchor = {kind, key, value};
+  toggleBrush(makeBrush(value), event);
+}
+
+const selectBar = (bar, event) => {
+  const key = bar.dataset.key;
+  selectRange('bar', key, +bar.dataset.value, value => ({type: 'bar', key, value}), event);
+};
+const selectGrade = (row, event) => selectRange('grade', 'G3', +row.dataset.grade, value => ({type: 'grade', value}), event);
 
 // Risk-factor chord diagram: each factor owns an arc on a circle; a ribbon joins two factors that
 // occur together in more course records than independence would predict (lift = observed / expected).
@@ -455,6 +509,7 @@ function network() {
 const passBar = share => `<div class="net-pass" role="img" aria-label="${pct(share)} reach a final grade of 10 or more"><span style="width:${(100 * share).toFixed(1)}%"></span></div>`
   + '<p class="net-pass-key">Blue: final grade 10+ · orange: below 10</p>';
 const closeButton = '<button type="button" class="net-close" aria-label="Close details">×</button>';
+const deselectButton = '<button type="button" class="net-deselect">Deselect <kbd>Esc</kbd></button>';
 
 function nodeDetail(i) {
   const {stats, conn} = netView, node = stats.nodes[i], ties = conn.ties[i];
@@ -463,7 +518,8 @@ function nodeDetail(i) {
   return `${closeButton}<h4>${esc(node.label)}</h4>`
     + `<p><strong>${node.n}</strong> records · <strong>${node.n ? pct(node.pass) : '—'}</strong> reach 10+ <small>(${pct(stats.pass)} overall)</small></p>`
     + (node.n ? passBar(node.pass) : '')
-    + (ties.length ? `<p class="net-sub">Travels with</p><ul class="net-ties">${chips}${more}</ul>` : '<p class="net-sub">No ties at this minimum lift.</p>');
+    + (ties.length ? `<p class="net-sub">Travels with</p><ul class="net-ties">${chips}${more}</ul>` : '<p class="net-sub">No ties at this minimum lift.</p>')
+    + deselectButton;
 }
 
 function pairDetail(a, b) {
@@ -472,7 +528,7 @@ function pairDetail(a, b) {
   const expected = A.n * B.n / stats.total;
   return `${closeButton}<h4>${esc(A.label)} + ${esc(B.label)}</h4>`
     + `<p><strong>${pair.n}</strong> records have both · <strong>${pair.lift.toFixed(1)}×</strong> chance <small>(${expected.toFixed(1)} expected)</small></p>`
-    + `<p><strong>${pct(pair.pass)}</strong> reach 10+ <small>(${pct(stats.pass)} overall)</small></p>` + passBar(pair.pass);
+    + `<p><strong>${pct(pair.pass)}</strong> reach 10+ <small>(${pct(stats.pass)} overall)</small></p>` + passBar(pair.pass) + deselectButton;
 }
 
 const netBrush = el => el.dataset.key
@@ -539,8 +595,8 @@ function drawNetworkOverlay() {
 function selectionKeys(e){
   if(e.key==='Escape')return setMatrixBrushes([]);
   if(e.key!=='Enter'&&e.key!==' ')return;
-  const bar=e.target.closest('.bar'),net=e.target.closest('.net-hit,.net-link');
-  if(bar){e.preventDefault();selectBar(bar,e);}else if(net){e.preventDefault();toggleBrush(netBrush(net),e);}
+  const bar=e.target.closest('.bar'),net=e.target.closest('.net-hit,.net-link'),grade=e.target.closest('.dist-row');
+  if(bar){e.preventDefault();selectBar(bar,e);}else if(grade){e.preventDefault();selectGrade(grade,e);}else if(net){e.preventDefault();toggleBrush(netBrush(net),e);}
 }
 let wired=false;
 function wire(){
@@ -554,14 +610,18 @@ function wire(){
     const s=e.target.closest('#net-strongest');
     if(s)toggleBrush({type:'pair',a:s.dataset.a,b:s.dataset.b},e);
   });
-  netChart.addEventListener('click',e=>{const el=e.target.closest('.net-hit,.net-link');if(!el)return;netClickPoint=el.classList.contains('net-link')&&e.clientX?{x:e.clientX,y:e.clientY}:null;toggleBrush(netBrush(el),e);});
-  $('net-detail').addEventListener('click',e=>{if(e.target.closest('.net-close'))clearNetFocus();});
+  // A click on empty chart space deselects, like Esc and the box's Deselect button.
+  netChart.addEventListener('click',e=>{const el=e.target.closest('.net-hit,.net-link');if(!el){if(netFocus())clearNetFocus();return;}netClickPoint=el.classList.contains('net-link')&&e.clientX?{x:e.clientX,y:e.clientY}:null;toggleBrush(netBrush(el),e);});
+  $('net-detail').addEventListener('click',e=>{if(e.target.closest('.net-close,.net-deselect'))clearNetFocus();});
+  // Esc deselects the chord diagram wherever focus is, not only inside its card.
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&netFocus())clearNetFocus();});
   addEventListener('resize',scheduleSelectionUpdate);
   $('matrix').addEventListener('pointerdown',startBrush);
   $('matrix').addEventListener('pointermove',moveBrush);
   $('matrix').addEventListener('pointerup',endBrush);
   $('matrix').addEventListener('pointercancel',endBrush);
   $('matrix').addEventListener('click',e=>{const bar=e.target.closest('.bar');if(bar)selectBar(bar,e);});
+  $('grade-dist').addEventListener('click',e=>{const row=e.target.closest('.dist-row');if(row)selectGrade(row,e);});
   $('v7').addEventListener('keydown',selectionKeys);
   $('network').addEventListener('keydown',selectionKeys);
 }
