@@ -7,7 +7,7 @@
 // clicking an open answer again closes its branch, and Back undoes the last step.
 // "Show full tree" reveals every path at once.
 (function () {
-  const TEAL = '#2563a6', ORANGE = '#c46743', PASS_GRADE = 10;
+  const TEAL = '#2f6f4e', ORANGE = '#c4841d', PASS_GRADE = 10; // names are historical: TEAL = pass (green), ORANGE = below 10 (amber)
   const W = 1120, ROW = 84, TOP = 34, Q_W = 164, Q_H = 72, LEAF_W = 240, LEAF_H = 72, LEAF_X = W - LEAF_W - 6;
   const COLUMN_X = [6, 223, 440, 657], LINK_MIN = 2, LINK_MAX = 26, LINE = 16, PAD = 11;
   const PILL_W = 36, PILL_H = 18, PILL_GAP = 5, ROOT = 'r';
@@ -77,7 +77,7 @@
   const leafKeys = node => node.leaves.join(' ');
   const shown = (id, state) => state.full || state.open.includes(id) ? ' is-shown' : '';
   const passBar = (x, y, width, node) => {
-    if (!node.n) return `<rect x="${x}" y="${y}" width="${width}" height="6" rx="3" fill="#e2e8f0"/>`;
+    if (!node.n) return `<rect x="${x}" y="${y}" width="${width}" height="6" rx="3" fill="#e4ded2"/>`;
     const split = round(width * node.pass);
     return `<rect x="${x}" y="${y}" width="${width}" height="6" rx="3" fill="${ORANGE}"/>`
       + (split ? `<rect x="${x}" y="${y}" width="${split}" height="6" rx="3" fill="${TEAL}"/>` : '');
@@ -231,7 +231,7 @@
     const heads = `<text class="tree-head" x="${COLUMN_X[0]}" y="16">QUESTIONS TO ASK</text><text class="tree-head" x="${LEAF_X}" y="16">WHERE HELP COULD BEGIN</text>`;
     const controls = `<div class="tree-controls"><label class="tree-toggle"><input type="checkbox" class="tree-full-toggle">Show full tree</label>`
       + `<button type="button" class="tree-back">← Back</button><button type="button" class="tree-restart">Start over</button><p class="tree-status" aria-live="polite"></p></div>`;
-    const legend = `<div class="tree-legend"><span><svg width="34" height="6" aria-hidden="true"><rect width="34" height="6" rx="3" fill="${ORANGE}"/><rect width="24" height="6" rx="3" fill="${TEAL}"/></svg>Share reaching a final grade ≥10 (blue) or not (orange)</span><span><svg width="34" height="12" aria-hidden="true"><path d="M0 6 H34" stroke="#cbd5e1" stroke-width="8"/></svg>Branch width = records on that path</span></div>`;
+    const legend = `<div class="tree-legend"><span><svg width="34" height="6" aria-hidden="true"><rect width="34" height="6" rx="3" fill="${ORANGE}"/><rect width="24" height="6" rx="3" fill="${TEAL}"/></svg>Share reaching a final grade ≥10 (green) or not (amber)</span><span><svg width="34" height="12" aria-hidden="true"><path d="M0 6 H34" stroke="#d6d1c7" stroke-width="8"/></svg>Branch width = records on that path</span></div>`;
     container.innerHTML = controls + legend
       + `<div class="tree-scroll"><svg class="tree-svg${state.full ? ' is-full' : ''}" viewBox="0 0 ${W} ${height}" role="group" aria-label="Support conversation tree with ${nextRow} suggested starting points">${heads}<g class="tree-links">${links}</g>${boxes}</svg></div>`;
     applyState(container, state);

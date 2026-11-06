@@ -1,5 +1,5 @@
 'use strict';
-const $=id=>document.getElementById(id), teal='#2563a6', orange='#c46743';
+const $=id=>document.getElementById(id), teal='#2f6f4e', orange='#c4841d'; // names are historical: teal = pass (green), orange = below 10 (amber)
 let records=[];
 const mean=a=>a.length?a.reduce((s,r)=>s+r.G3,0)/a.length:null;
 const context=r=>+(r.internet==='no')+ +(r.traveltime>=3)+ +(r.Medu<3)+ +(r.Fedu<3);
@@ -29,7 +29,7 @@ function familyBoxplot(){
   const famDesc=`Two box plots of final grade by household size: medians of ${num(gA.median)} and ${num(gB.median)}, with ${boxText}.`;
   let svg='<svg viewBox="0 0 720 360" role="img" aria-labelledby="famsize-title famsize-desc"><title id="famsize-title">Final grade by family size</title><desc id="famsize-desc">'+famDesc+'</desc>';
   for(let value=0;value<=20;value+=5){const py=y(value);svg+=`<line x1="72" y1="${py}" x2="680" y2="${py}" stroke="#ded9d0"/><text x="59" y="${py+4}" text-anchor="end">${value}</text>`;}
-  svg+='<text x="72" y="20">Final grade / 20</text><line x1="72" y1="180" x2="680" y2="180" stroke="#64748b" stroke-dasharray="5 5"/><text x="676" y="173" text-anchor="end">Passing threshold · 10</text>';
+  svg+='<text x="72" y="20">Final grade / 20</text><line x1="72" y1="180" x2="680" y2="180" stroke="#8a8378" stroke-dasharray="5 5"/><text x="676" y="173" text-anchor="end">Passing threshold · 10</text>';
   cohorts.forEach((group,index)=>{
     const x=centers[index],tip=`${group.label} people; median ${fmt(group.median)}; middle 50% ${fmt(group.q1)} to ${fmt(group.q3)}; n=${group.values.length}`;
     svg+=`<g tabindex="0" data-tip="${tip}" aria-label="${tip}"><title>${tip}</title>`;
@@ -40,7 +40,7 @@ function familyBoxplot(){
     svg+='</g>';
     svg+=`<text class="box-label" x="${x}" y="326" text-anchor="middle">${group.label}</text><text class="box-sublabel" x="${x}" y="343" text-anchor="middle">people in household · n=${group.values.length}</text>`;
   });
-  svg+='<path d="M245 71 V50 H505 V71" fill="none" stroke="#172b4d" stroke-width="1.5"/><text class="annotation" x="375" y="42" text-anchor="middle">'+(sameBox?(sameMed?'The boxes align exactly':'The boxes span the same range'):'The boxes overlap heavily')+'</text></svg>';
+  svg+='<path d="M245 71 V50 H505 V71" fill="none" stroke="#1f2a24" stroke-width="1.5"/><text class="annotation" x="375" y="42" text-anchor="middle">'+(sameBox?(sameMed?'The boxes align exactly':'The boxes span the same range'):'The boxes overlap heavily')+'</text></svg>';
   $('famsize-takeaway').innerHTML=(sameMed?`<strong>Same median: ${num(gA.median)}</strong>`:`<strong>Medians: ${num(gA.median)} vs ${num(gB.median)}</strong>`)+`<span>${sameBox?'Same':'Similar'} middle 50%: ${num(gA.q1)}–${num(gA.q3)}${sameBox?'':' vs '+num(gB.q1)+'–'+num(gB.q3)}</span>`;
   $('famsize-box').innerHTML=legend(cohorts.map(group=>[group.label+' people',group.color]))+svg;
 }
@@ -141,7 +141,7 @@ document.addEventListener('click',e=>{
 });
 
 function higherSankey(){
-  const bands=[{name:'14 and above',color:teal},{name:'10 to 13',color:'#8aa4bf'},{name:'Below 10',color:orange}];
+  const bands=[{name:'14 and above',color:teal},{name:'10 to 13',color:'#9fae8e'},{name:'Below 10',color:orange}];
   const band=g=>g>=14?0:g>=10?1:2, periods=['G1','G2','G3'], f=v=>v.toFixed(1);
   const X=[190,410,630], NW=16, TOP=40, GAP=10, SCALE=190;
   const take=[];

@@ -10,8 +10,8 @@ const SCHOOL_GEOGRAPHY={"land":[{"name":"France","rings":[[[-54.1115,2.1143],[-5
   const NS = 'http://www.w3.org/2000/svg';
   const WIDTH = 820, HEIGHT = 560;
   const schools = [
-    {code:'GP', city:'Évora', name:'Escola Secundária Gabriel Pereira', point:[-7.902909336,38.5745042], population:53591, color:'#2563a6'},
-    {code:'MS', city:'Portalegre', name:'Escola Secundária Mouzinho da Silveira', point:[-7.432714403,39.30331558], population:22341, color:'#b96a43'}
+    {code:'GP', city:'Évora', name:'Escola Secundária Gabriel Pereira', point:[-7.902909336,38.5745042], population:53591, color:'#2f6f4e'},
+    {code:'MS', city:'Portalegre', name:'Escola Secundária Mouzinho da Silveira', point:[-7.432714403,39.30331558], population:22341, color:'#c4841d'}
   ];
   // A local equirectangular projection, with longitude scaled at 39° N.
   const project = ([lon,lat]) => [lon*Math.cos(39*Math.PI/180), -lat];

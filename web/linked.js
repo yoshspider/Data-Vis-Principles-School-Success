@@ -2,7 +2,7 @@
 // Linked scatterplot matrix + chord diagram, shared by the data story.
 // Wrapped in a function so its helpers do not clash with story.js.
 (function () {
-const $=id=>document.getElementById(id), teal='#2563a6', orange='#c46743';
+const $=id=>document.getElementById(id), teal='#2f6f4e', orange='#c4841d'; // names are historical: teal = pass (green), orange = below 10 (amber)
 const mean=a=>a.length?a.reduce((s,r)=>s+r.G3,0)/a.length:null;
 const fmt=n=>n===null?'No records':n.toFixed(1);
 function mark(tag,attrs,tip,hasTitle=true){return `<${tag} ${attrs} tabindex="0" data-tip="${tip}" aria-label="${tip}">${hasTitle?`<title>${tip}</title>`:''}</${tag}>`;}
@@ -51,7 +51,7 @@ const valueOf = (r, key) => measures[key].cap === undefined ? r[key] : Math.min(
 const tickLabel = (m, v) => v === m.cap ? `${v}+` : `${v}`;
 const jittered = (r, key) => valueOf(r, key) + jitter(r, key);
 
-// Colour always means the final grade: blue reached 10/20, orange fell below it.
+// Colour always means the final grade: green reached 10/20, amber fell below it.
 const gradeColor = r => r.G3 >= PASS_GRADE ? teal : orange;
 
 function dots(rows, xKey, yKey) {
@@ -66,7 +66,7 @@ function valueCounts(rows, key) {
   return counts;
 }
 
-// Bars stack records below 10 (orange, on the baseline) under records at 10 or above (blue).
+// Bars stack records below 10 (amber, on the baseline) under records at 10 or above (green).
 function stackedBars(rows, key, max) {
   const m = measures[key], px = scaleX(m), width = bandWidth(m) - 2;
   const below = valueCounts(rows.filter(r => r.G3 < PASS_GRADE), key);
@@ -98,8 +98,8 @@ function matrixCell(xKey, yKey, rows) {
   if (xKey === yKey) {
     svg += histogram(xKey, rows);
   } else {
-    ticks(y).forEach(v => svg += `<line x1="${PAD}" x2="${PAD + SPAN}" y1="${py(v)}" y2="${py(v)}" stroke="#f1f5f9"/>`);
-    ticks(x).forEach(v => svg += `<line y1="${PAD}" y2="${PAD + SPAN}" x1="${px(v)}" x2="${px(v)}" stroke="#f1f5f9"/>`);
+    ticks(y).forEach(v => svg += `<line x1="${PAD}" x2="${PAD + SPAN}" y1="${py(v)}" y2="${py(v)}" stroke="#f3efe7"/>`);
+    ticks(x).forEach(v => svg += `<line y1="${PAD}" y2="${PAD + SPAN}" x1="${px(v)}" x2="${px(v)}" stroke="#f3efe7"/>`);
     svg += `<g class="base" fill-opacity=".45">${dots(rows, xKey, yKey)}</g><g class="sel" fill-opacity=".9"></g>`;
     svg += `<g class="brushes"></g><rect class="brush-area" x="${PAD}" y="${PAD}" width="${SPAN}" height="${SPAN}"/>`;
     ticks(y).forEach(v => svg += `<text x="20" y="${py(v) + 3}" text-anchor="end">${tickLabel(y, v)}</text>`);
@@ -122,7 +122,7 @@ function matrix() {
     svg += `<text x="${center}" y="26" text-anchor="middle" class="matrix-label">${measures[key].short}</text><text transform="translate(16,${center}) rotate(-90)" text-anchor="middle" class="matrix-label">${measures[key].short}</text>`;
   });
   matrixVariables.forEach((yKey, yi) => matrixVariables.forEach((xKey, xi) => {
-    svg += `<g transform="translate(${OFFSET + xi * CELL},${OFFSET + yi * CELL})" data-x="${xKey}" data-y="${yKey}"><rect x="3" y="3" width="${CELL - 6}" height="${CELL - 6}" fill="${xi === yi ? '#f1f5f9' : 'white'}" stroke="#e2e8f0" rx="3"/>`;
+    svg += `<g transform="translate(${OFFSET + xi * CELL},${OFFSET + yi * CELL})" data-x="${xKey}" data-y="${yKey}"><rect x="3" y="3" width="${CELL - 6}" height="${CELL - 6}" fill="${xi === yi ? '#f3efe7' : 'white'}" stroke="#e4ded2" rx="3"/>`;
     svg += matrixCell(xKey, yKey, matrixRows) + '</g>';
   }));
   $('matrix').innerHTML = svg + '</svg>';
@@ -159,7 +159,7 @@ function drawBrushes(svg) {
 
 
 // Final-grade histogram beside the matrix, drawn like the matrix's diagonal histograms: bars count
-// every record (grey once something is selected) with the selected records on top in blue / orange.
+// every record (grey once something is selected) with the selected records on top in green / amber.
 // Each grade row is clickable and selects those records across the linked views.
 // It stands as a tall column: grade 0 level with the bottom row of cells and 20 level with the top
 // row, axis on the right and bars growing left. It is drawn in screen pixels so it can line up with
@@ -197,14 +197,14 @@ function drawGradeDist(selected, hasSelection) {
   const rowTop = g => T + (20 - g) * bh, x = n => axis - n / max * pw, gradeFill = g => g >= PASS_GRADE ? teal : orange;
   const bar = (g, n, fill, cls) => n ? `<rect class="${cls}" x="${x(n).toFixed(1)}" y="${(rowTop(g) + 1).toFixed(1)}" width="${(axis - x(n)).toFixed(1)}" height="${Math.max(1, bh - 2).toFixed(1)}" fill="${fill}"/>` : '';
   let svg = `<svg class="${hasSelection ? 'has-selection' : ''}" width="${W}" height="${H.toFixed(0)}" viewBox="0 0 ${W} ${H.toFixed(1)}" role="group" aria-label="Final grade distribution; click a grade to select its records">`;
-  for (let n = step; n <= max; n += step) svg += `<line x1="${x(n)}" x2="${x(n)}" y1="${T}" y2="${T + ph}" stroke="#e2e8f0"/><text x="${n === max ? 0 : x(n)}" y="${T + ph + 12}" text-anchor="${n === max ? 'start' : 'middle'}">${n}</text>`;
+  for (let n = step; n <= max; n += step) svg += `<line x1="${x(n)}" x2="${x(n)}" y1="${T}" y2="${T + ph}" stroke="#e4ded2"/><text x="${n === max ? 0 : x(n)}" y="${T + ph + 12}" text-anchor="${n === max ? 'start' : 'middle'}">${n}</text>`;
   all.forEach((n, g) => {
     svg += bar(g, n, gradeFill(g), 'dist-base') + (hasSelection ? bar(g, sel[g], gradeFill(g), 'dist-sel') : '');
     const isSelected = matrixBrushes.some(b => isSameGrade(b, g));
     const tip = `Final grade ${g}: ${n} course records${hasSelection ? `, ${sel[g]} of them selected` : ''}. Click or press Enter to select them.`;
     svg += mark('rect', `class="dist-row${isSelected ? ' is-selected' : ''}" data-grade="${g}" aria-pressed="${isSelected}" x="${DIST_LEFT}" y="${rowTop(g).toFixed(1)}" width="${axis - DIST_LEFT}" height="${bh.toFixed(1)}"`, tip, false);
   });
-  svg += `<line x1="${axis}" x2="${axis}" y1="${T}" y2="${T + ph}" stroke="#94a3b8"/>`;
+  svg += `<line x1="${axis}" x2="${axis}" y1="${T}" y2="${T + ph}" stroke="#a39d92"/>`;
   [0, 5, 10, 15, 20].forEach(g => svg += `<text class="${g % 10 ? '' : 'dist-major'}" x="${axis + 5}" y="${(rowTop(g) + bh / 2 + 4).toFixed(1)}">${g}</text>`);
   svg += `<text x="${axis}" y="${T + ph + 12}" text-anchor="middle">0</text></svg>`;
   const shown = hasSelection ? selected : rows;
@@ -335,8 +335,8 @@ const NET_LABEL_R = NET_R_IN + NET_BAND_MAX + NET_LABEL_GAP;
 // Ribbons between two groups are pulled toward each group's anchor inside the circle, so ties
 // between the same pair of groups travel together as one bundle.
 const NET_BUNDLE_R = .4, NET_BUNDLE_PULL = .9;
-// Ribbon colour runs light to dark violet from 1× to NET_LIFT_DARK× (blue and orange already mean pass / fail).
-const NET_LIFT_DARK = 3, NET_LIFT_LIGHT_RGB = [214, 209, 245], NET_LIFT_DARK_RGB = [59, 44, 158];
+// Ribbon colour runs light to dark plum from 1× to NET_LIFT_DARK× (green and amber already mean pass / fail).
+const NET_LIFT_DARK = 3, NET_LIFT_LIGHT_RGB = [233, 224, 230], NET_LIFT_DARK_RGB = [96, 44, 86];
 // Ribbon width follows lift above chance, plus a floor so the weakest ties stay visible.
 const NET_WEIGHT_FLOOR = .15;
 // Arcs run clockwise from the top: behavior down the right, school history at the bottom, context up the left.
@@ -505,9 +505,9 @@ function network() {
 }
 
 // Details stay hidden until an arc or ribbon is clicked; then a small box opens beside it.
-// Blue is the share reaching a final grade ≥10, orange the share below, as in the other charts.
+// Blue is the share reaching a final grade ≥10, amber the share below, as in the other charts.
 const passBar = share => `<div class="net-pass" role="img" aria-label="${pct(share)} reach a final grade of 10 or more"><span style="width:${(100 * share).toFixed(1)}%"></span></div>`
-  + '<p class="net-pass-key">Blue: final grade 10+ · orange: below 10</p>';
+  + '<p class="net-pass-key">Green: final grade 10+ · amber: below 10</p>';
 const closeButton = '<button type="button" class="net-close" aria-label="Close details">×</button>';
 const deselectButton = '<button type="button" class="net-deselect">Deselect <kbd>Esc</kbd></button>';
 
