@@ -86,8 +86,25 @@ body.story{--story-paper:#f4f0e8;--story-surface:#fffdf8;--story-line:#d8d1c5;ba
 .sankey-controls span{font-size:12px;color:var(--muted)}
 .sk-step{opacity:0;pointer-events:none;transition:opacity .6s ease}
 .sk-step.is-on{opacity:1;pointer-events:auto}
+.sk-nav{opacity:0;pointer-events:none;cursor:pointer;outline:none;transition:opacity .4s ease,transform .2s ease}
+.sk-nav.is-on{opacity:1;pointer-events:auto}
+.sk-nav rect{transition:fill .2s,stroke .2s}
+.sk-nav .sk-icon{fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s ease}
+.sk-next rect{fill:var(--ink);filter:drop-shadow(0 2px 3px rgba(23,43,77,.25))}
+.sk-next .sk-icon{stroke:#fff}
+.sk-back rect{fill:#fff;stroke:#cbd5e1;stroke-width:1.2}
+.sk-back .sk-icon{stroke:var(--ink)}
+.sk-nav:hover,.sk-nav:focus-visible{transform:translateY(-1px)}
+.sk-next:hover .sk-icon,.sk-next:focus-visible .sk-icon{transform:translateX(2px)}
+.sk-back:hover .sk-icon,.sk-back:focus-visible .sk-icon{transform:translateX(-2px)}
+.sk-back:hover rect,.sk-back:focus-visible rect{stroke:var(--ink)}
+.sk-nav:focus-visible rect{stroke:var(--teal);stroke-width:2}
+/* A gentle nudge on the forward arrow invites the next step. */
+.sk-next.is-on .sk-icon{animation:sk-nudge 2.4s ease-in-out infinite}
+.sk-next:hover .sk-icon,.sk-next:focus-visible .sk-icon{animation:none}
+@keyframes sk-nudge{0%,70%,100%{transform:none}80%{transform:translateX(2.5px)}90%{transform:translateX(0)}}
 #higher .sankey-wrap{cursor:pointer}
-@media(prefers-reduced-motion:reduce){.sk-step{transition:none}}
+@media(prefers-reduced-motion:reduce){.sk-step,.sk-nav,.sk-nav .sk-icon{transition:none}.sk-next.is-on .sk-icon{animation:none}}
 
 /* Geographic hook and shared scroll transitions. */
 html{scroll-behavior:smooth}

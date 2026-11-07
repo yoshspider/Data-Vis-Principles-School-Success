@@ -133,12 +133,31 @@ function applySankeyStage(){
     el.setAttribute('aria-hidden',String(!on));
     if(el.hasAttribute('tabindex'))el.setAttribute('tabindex',on?'0':'-1');
   });
+  root.querySelectorAll('.sk-nav').forEach(el=>{
+    const on=+el.dataset.show===sankeyStage;
+    el.classList.toggle('is-on',on);
+    el.setAttribute('aria-hidden',String(!on));
+    el.setAttribute('tabindex',on?'0':'-1');
+  });
   const btn=$('sankey-next'),step=$('sankey-step');
   if(btn)btn.textContent=SANKEY_LABELS[sankeyStage-1];
   if(step)step.textContent=`Step ${sankeyStage} of 3 · ${['G1 grades','G1 → G2','G2 → G3 (final)'][sankeyStage-1]}`;
 }
 function advanceSankey(){sankeyStage=sankeyStage%3+1;applySankeyStage();}
+// Jumps to the step an arrow points at; from the keyboard, focus moves to the same panel's new arrow.
+function goSankey(arrow,fromKeyboard){
+  const panel=arrow.closest('.sankey-panel'),index=[...$('higher').querySelectorAll('.sankey-panel')].indexOf(panel);
+  sankeyStage=+arrow.dataset.go;applySankeyStage();
+  const next=fromKeyboard&&$('higher').querySelectorAll('.sankey-panel')[index];
+  if(next){const target=next.querySelector('.sk-nav.is-on');if(target)target.focus();}
+}
+document.addEventListener('keydown',e=>{
+  const arrow=e.target.closest&&e.target.closest('#higher .sk-nav');
+  if(arrow&&(e.key==='Enter'||e.key===' ')){e.preventDefault();goSankey(arrow,true);}
+});
 document.addEventListener('click',e=>{
+  const arrow=e.target.closest('#higher .sk-nav');
+  if(arrow)return goSankey(arrow,false);
   if(e.target.closest('#sankey-next'))return advanceSankey();
   if(sankeyStage<3&&e.target.closest('#higher .sankey-wrap'))advanceSankey();
 });
@@ -156,6 +175,15 @@ function higherSankey(){
     take.push([label,100*counts[2][2]/total,100*counts[2][0]/total,100*counts[2][1]/total,total]);
     let svg=`<svg viewBox="0 0 860 ${TOP+SCALE+2*GAP+14}" role="img" aria-label="Sankey diagram of grade bands from G1 to G3 for students: ${label.toLowerCase()}">`;
     periods.forEach((p,i)=>svg+=`<text class="sk-step" data-from="${i+1}" x="${X[i]+NW/2}" y="22" text-anchor="middle" style="font-weight:700">${p==='G3'?'G3 (final)':p}</text>`);
+    // Arrow buttons beside the newest heading move between steps: → after G1 reveals G2; at G2,
+    // ← goes back to G1 and → expands to G3; at G3, ← goes back to G2.
+    // Forward arrows are solid pills like the step button; back arrows are light outlined pills.
+    const nav=(show,go,x,dir)=>{
+      const label=`${go>show?'Show':'Back to'} ${periods[go-1]}`, tip=x+5*dir, tail=x-6*dir;
+      return `<g class="sk-nav ${dir>0?'sk-next':'sk-back'}" data-show="${show}" data-go="${go}" role="button" tabindex="-1" aria-hidden="true" aria-label="${label}"><title>${label}</title>`
+        +`<rect x="${x-17}" y="6" width="34" height="22" rx="11"/><path class="sk-icon" d="M${tail},17 H${tip} M${tip-4*dir},12.5 L${tip},17 L${tip-4*dir},21.5"/></g>`;
+    };
+    svg+=nav(1,2,X[0]+NW/2+30,1)+nav(2,1,X[1]+NW/2-30,-1)+nav(2,3,X[1]+NW/2+30,1)+nav(3,2,X[2]+NW/2-52,-1);
     for(let p=0;p<2;p++){
       const srcOff=[0,0,0],tgtOff=[0,0,0];
       for(let s=0;s<3;s++)for(let t=0;t<3;t++){
