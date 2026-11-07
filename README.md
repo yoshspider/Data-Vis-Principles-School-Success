@@ -8,8 +8,6 @@ Open `web/index.html` directly in any modern browser; no server, installation, o
 
 For local development with clean URLs, run `python app.py --port 8765` and open `http://127.0.0.1:8765`.
 
-The submission-ready process book, including the Phase 2 implementation addendum, is at `output/pdf/school-success-process-book-phase2.pdf`.
-
 ## Run on Windows
 
 Double-click `dist/SchoolSuccessExplorer.exe`. A console window starts a server on a free local port and opens the default browser. Keep the console open while exploring; close it to stop. No Python installation or internet connection is needed for the executable. The unsigned executable may prompt Windows security checks.
