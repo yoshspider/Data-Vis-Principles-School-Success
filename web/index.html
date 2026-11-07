@@ -2,20 +2,25 @@
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Student Performance · Data Story</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="story.css"></head>
 <body class="story merged">
-<header class="site-header"><a href="#top" class="brand">Student Performance</a><span class="eyebrow">CS 6730 · SCHOOL SUCCESS EXPLORER</span><div class="header-actions"><button id="export">Export filtered CSV ↗</button></div></header>
+<header class="site-header"><a href="#top" class="brand">Student Performance</a><span class="eyebrow">CS 6730 · SCHOOL SUCCESS EXPLORER</span></header>
 <main id="top">
 <section class="cover">
 <p class="eyebrow">CS 6730 · DATA VISUALIZATION · FALL 2026</p>
-<h1>From familiar assumptions<br> to a concrete group</h1>
-<p class="lead">Four sections trace how the evidence narrows from weak demographic signals to past academic history.</p>
+<h1>How do student demographics and behaviors correlate with student grades?</h1>
+<p class="lead">Experience a 4 part story discussing whether behavior or demographic data has a greater correlation with grades for high school students</p>
 <p class="byline">Yash Agrawal · Justin Bimal · Joshua Blackmon · Oluwatimi Omoteso · Abdulaziz Alajlan</p>
 <p class="intro-note">Mathematics and Portuguese · 1,044 course records (395 + 649) · Grades on a 0–20 scale</p>
-<a class="scroll-cue" href="#explore">Explore the data <span aria-hidden="true">↓</span></a>
+<a class="scroll-cue" href="#quote">Explore the data <span aria-hidden="true">↓</span></a>
 </section>
 
-<section class="filters merged-controls" id="explore" aria-label="Filter course records"><div class="filter-heading"><p class="eyebrow">CONTROL PANEL</p><strong>Shape the view</strong></div><label>Subject<select id="subject"><option value="all">Both subjects</option><option>Mathematics</option><option>Portuguese</option></select></label><label>School<select id="school"><option value="all">Both schools</option><option value="GP">Gabriel Pereira</option><option value="MS">Mousinho da Silveira</option></select></label><button id="reset">Reset filters</button><div class="filter-result"><i aria-hidden="true"></i><span id="filter-status" aria-live="polite"></span></div></section>
-<section class="stats merged-stats" id="stats"></section>
-<p class="filter-note">Filters update every chart below. Narrative figures describe all 1,044 course records.</p>
+<section class="story-section quote-frame" id="quote" data-num="" aria-label="Opening quotation">
+<figure class="quote">
+<blockquote><p>“Education, then, beyond all other devices of human origin, is the great equalizer of the conditions of men—the balance-wheel of the social machinery.”</p></blockquote>
+<figcaption>Horace Mann <span>Twelfth Annual Report, Massachusetts Board of Education, 1848</span></figcaption>
+</figure>
+<p class="quote-sub">But what if students aren’t receiving an equal education?</p>
+<a class="scroll-cue" href="#hook">Meet the schools <span aria-hidden="true">↓</span></a>
+</section>
 
 <section class="story-section" id="hook" data-num="01">
 <p class="eyebrow">01 / HOOK</p>
@@ -28,42 +33,98 @@
 <div class="geo-controls" role="group" aria-label="Choose a map view"><button type="button" data-geo="1" aria-pressed="false">01 <span>Portugal</span></button><button type="button" data-geo="2" aria-pressed="false">02 <span>Évora · GP</span></button><button type="button" data-geo="3" aria-pressed="false">03 <span>Portalegre · MS</span></button><button type="button" data-geo="4" aria-pressed="false">04 <span>Both schools</span></button><span id="geo-status" aria-live="polite">The journey starts when the map enters view.</span></div>
 <details class="geo-sources"><summary>Map & population sources</summary><p>School coordinates: Construção Pública’s <a href="https://construcaopublica.gov.pt/pt/escolas/028" target="_blank" rel="noreferrer">Gabriel Pereira</a> and <a href="https://construcaopublica.gov.pt/pt/escolas/027" target="_blank" rel="noreferrer">Mouzinho da Silveira</a> pages. Municipal populations (2021, INE as published by DGAL): <a href="https://www.portalautarquico.dgal.gov.pt/pt-PT/entidades-locais/concelhos/evora/" target="_blank" rel="noreferrer">Évora, 53,591</a>; <a href="https://portalautarquico.dgal.gov.pt/pt-PT/entidades-locais/concelhos/portalegre/" target="_blank" rel="noreferrer">Portalegre, 22,341</a>. These describe whole municipalities, not city-only populations, school enrollment or the historical study cohort. Outlines: <a href="https://github.com/datasets/geo-countries" target="_blank" rel="noreferrer">Natural Earth / geo-countries (public domain)</a> and <a href="https://portalgeo.iniav.pt/arcgis/rest/services/Hosted/Municipios/FeatureServer/4" target="_blank" rel="noreferrer">INIAV municipal boundary service</a>, simplified for display. All geometry is bundled for offline use.</p></details>
 </article>
+</section>
+
+<section class="story-section stats-frame" id="explore" data-num="" aria-label="The data at a glance">
+<p class="eyebrow">THE DATA AT A GLANCE</p>
+<h2>Every record, one overview</h2>
+<div class="stats-filters" role="group" aria-label="Filter the overview statistics">
+<label>Subject<select id="subject"><option value="all">Both subjects</option><option>Mathematics</option><option>Portuguese</option></select></label>
+<label>School<select id="school"><option value="all">Both schools</option><option value="GP">Gabriel Pereira</option><option value="MS">Mouzinho da Silveira</option></select></label>
+<button type="button" id="reset">Reset</button>
+<span id="filter-status" aria-live="polite"></span>
+</div>
+<div class="stats merged-stats" id="stats"></div>
+</section>
+
+<section class="story-section hook-more" id="hook-more" data-num="" aria-label="Setting the question">
 <h3 class="geo-bridge">Once we know the setting, what actually separates grades?</h3>
-<p class="section-body">Nursery attendance has only a small relationship with grades (about 0.4 points in mean final grade), family-size groups have medians one point apart and identical middle-50% ranges, and paid classes show no grade advantage (paid-class records average slightly lower). These weak results challenge the assumption that familiar demographic or financial factors automatically identify the students at most risk.</p>
-<div class="story-grid single">
+<div class="box-carousel" id="box-carousel" role="group" aria-roledescription="carousel" aria-label="Three familiar demographic factors and final grade">
+<button type="button" class="car-btn car-prev" id="box-prev" aria-label="Previous chart">←</button>
+<div class="box-stage">
+<article class="card hook-card" id="nursery">
+<p class="eyebrow">NURSERY ATTENDANCE · FINAL GRADE</p>
+<h3>Attending nursery school, nearly the same grades</h3>
+<p>Final-grade distributions for students who attended nursery school and those who did not.</p>
+<div id="nursery-box" class="chart boxplot"></div>
+<p class="chart-takeaway" id="nursery-takeaway"></p>
+<p class="note">Boxes show the middle 50%; center lines mark medians; whiskers extend to the most distant values within 1.5 × IQR. Outlier values beyond the whiskers, such as grades of 0, are not drawn but are still counted in the quartiles and medians. The no-nursery group is much smaller, so its box is less stable. Course records combined, n=<span id="nursery-n">1,044</span>; some students appear in both subjects.</p>
+</article>
 <article class="card hook-card" id="famsize">
 <p class="eyebrow">FAMILY SIZE · FINAL GRADE</p>
 <h3>Different household sizes, nearly the same grades</h3>
 <p>Final-grade distributions for households of three or fewer people and households of more than three.</p>
 <div id="famsize-box" class="chart boxplot"></div>
 <p class="chart-takeaway" id="famsize-takeaway"></p>
-<p class="note">Boxes show the middle 50%; center lines mark medians; whiskers extend to the most distant values within 1.5 × IQR. Zero grades are retained. Course records combined, n=<span id="famsize-n">1,044</span>; some students appear in both subjects.</p>
+<p class="note">Boxes show the middle 50%; center lines mark medians; whiskers extend to the most distant values within 1.5 × IQR. Outlier values beyond the whiskers, such as grades of 0, are not drawn but are still counted in the quartiles and medians. Course records combined, n=<span id="famsize-n">1,044</span>; some students appear in both subjects.</p>
 </article>
+<article class="card hook-card" id="paid">
+<p class="eyebrow">PAID CLASSES · FINAL GRADE</p>
+<h3>Paid classes, no grade advantage</h3>
+<p>Final-grade distributions for students taking extra paid classes in the course subject and those who are not.</p>
+<div id="paid-box" class="chart boxplot"></div>
+<p class="chart-takeaway" id="paid-takeaway"></p>
+<p class="note">Boxes show the middle 50%; center lines mark medians; whiskers extend to the most distant values within 1.5 × IQR. Outlier values beyond the whiskers, such as grades of 0, are not drawn but are still counted in the quartiles and medians. Paid classes are extra paid lessons in the course subject. Course records combined, n=<span id="paid-n">1,044</span>; some students appear in both subjects.</p>
+</article>
+</div>
+<button type="button" class="car-btn car-next" id="box-next" aria-label="Next chart">→</button>
+<div class="car-foot"><div class="car-dots" id="box-dots"><button type="button" data-i="0" aria-label="Nursery attendance"></button><button type="button" data-i="1" aria-label="Family size"></button><button type="button" data-i="2" aria-label="Paid classes"></button></div><span id="box-status" aria-live="polite">1 of 3</span></div>
 </div>
 </section>
 
 <section class="story-section" id="rising" data-num="02">
 <p class="eyebrow">02 / RISING INSIGHTS</p>
-<h2>Goals, access and home context matter more</h2>
-<p class="section-summary">Three indicators show clearer separation, shifting attention from broad demographics toward student circumstances.</p>
-<p class="section-body">Students planning to pursue higher education have higher grades (mean 11.6 vs 8.4), students with home internet average about one point higher (11.6 vs 10.5), and students whose guardian is neither parent average about 1.3 points lower than those with a mother as guardian. These findings narrow the story from broad assumptions to indicators connected with student goals, access, and home context. The chord diagram and scatterplot matrix below let you test the pattern yourself: which disadvantages travel together, and which behaviors go along with a higher final grade.</p>
+<h2>Motivation and Familial Disadvantages show Correlation with Grades</h2>
 <div class="story-grid rising">
 <article class="card wide-card">
 <p class="eyebrow">HIGHER-EDUCATION PLANS</p>
 <h3>How grades flow from G1 to G3</h3>
-<p>Each ribbon follows course records from one grade band to another across G1, G2 and G3. Use the arrows beside G1, G2 and G3 (or the button, or a click on the diagrams) to reveal G2 and G3, or to go back a step. The top diagram covers students who plan higher education, the bottom one those who do not.</p>
-<p id="higher-text"></p>
-<p class="chart-takeaway" id="higher-takeaway"></p>
-<div class="sankey-controls"><button type="button" id="sankey-next"></button><span id="sankey-step" aria-live="polite"></span></div>
 <div id="higher" class="chart progression"></div>
 <p class="note">G1 and G2 are period grades; G3 is the final grade. Bands: below 10 (failing), 10 to 13, 14 and above. Combined course records (n=<span id="higher-n">1,044</span>); heights are shares within each group, so the two diagrams compare fairly even though the no-plans group is much smaller and its flows are less stable. Flows describe groups, not individual students, and show association, not cause.</p>
 </article>
-<article class="card wide-card" id="network"><p class="eyebrow">HOW DISADVANTAGES CONNECT</p><h3>Which disadvantages travel together?</h3><p>Each arc around the circle is a risk factor: context factors on the left, behavior factors on the right and past failure at the bottom. A ribbon joins two factors that occur together more often than chance. Click an arc or ribbon to see its numbers, including how many of those students pass; its records are also selected in the matrix below. Press Esc, click empty space or use Deselect to clear it.</p>
+<article class="card wide-card fig-card" id="network"><p class="eyebrow">HOW DISADVANTAGES CONNECT</p><h3>Which disadvantages travel together?</h3>
+<div class="fig-layout">
+<div class="fig-text">
+<p>Each arc around the circle is a risk factor: context factors on the left, behavior factors on the right and past failure at the bottom. A ribbon joins two factors that occur together more often than chance, and its colour and width show how much more often (the lift).</p>
+<ul class="fig-points">
+<li><strong>Click</strong> an arc or ribbon to see its record count and pass rate.</li>
+<li>The same records are <strong>selected in the matrix</strong> below.</li>
+<li><strong>Drag the lift slider</strong> to the right to keep only the strongest ties.</li>
+<li><strong>Esc</strong>, or a click on empty space, clears the selection.</li>
+</ul>
 <div class="scatter-controls"><button id="network-clear" type="button">Clear selection</button><label class="net-threshold">Minimum lift <output id="net-lift-value">1.3×</output><input type="range" id="net-lift" min="1" max="2.5" step="0.1" value="1.3"></label><span id="network-selection" aria-live="polite"></span></div>
-<div id="net-callout"></div><div class="net-layout"><div id="network-chart" class="chart network-chart"></div><aside id="net-detail" class="net-detail net-pop" hidden aria-live="polite" aria-label="Details of the clicked factor or ribbon"></aside></div><div class="legend net-legend"><span><strong>Click an arc or ribbon for details</strong></span><span><svg width="30" height="14" aria-hidden="true"><rect y="10" width="12" height="4" fill="#8a8378"/><rect x="16" y="0" width="14" height="14" fill="#8a8378"/></svg>Arc = one factor; thicker = more connected</span><span><svg width="60" height="12" aria-hidden="true"><defs><linearGradient id="lift-key"><stop offset="0" stop-color="rgb(233,224,230)"/><stop offset="1" stop-color="rgb(96,44,86)"/></linearGradient></defs><path d="M0 5 L60 0 V12 L0 7 Z" fill="url(#lift-key)"/></svg>Ribbon colour &amp; width = lift (1× → 3×+)</span></div><p class="note">Lift 2× = twice as often as chance (pairs with at least 10 shared records). Every factor gets an equal arc length; record counts and pass rates appear in a box when you click it. Arc thickness is the connection score: the sum of (lift − 1) over the ties shown. Ties between the same two groups are bundled together. An association, not a cause.</p></article>
-<article class="card wide-card scatter-card" id="v7"><p class="eyebrow">SCATTERPLOT MATRIX</p><h3>What goes along with a higher final grade?</h3><p>Three behaviors a school can act on: weekly study time, workday alcohol use and absences. Each cell compares the column variable (horizontal axis) with the row variable (vertical axis); the diagonal shows each variable's distribution. Every dot and bar is coloured by final grade, so look for where green gives way to amber. Drag a box in any cell, or click a bar, to select records: the same records keep their colour in every other cell, and everything else turns grey. Selections made in the chord diagram above appear here too. To select several bars at once, click one and Shift-click another in the same histogram: every bar in between is selected. Ctrl/⌘-click (or tick “Add to selection”) adds single bars, and Shift while dragging adds another box. The tall column on the right counts records at each final grade (0 at the bottom, 20 at the top); the selected records are coloured over grey bars for all records, and clicking a grade selects its records in every view.</p>
+<div id="net-callout"></div>
+<p class="note">Lift 2× = twice as often as chance (pairs with at least 10 shared records). Every factor gets an equal arc length; record counts and pass rates appear in a box when you click it. Arc thickness is the connection score: the sum of (lift − 1) over the ties shown. Ties between the same two groups are bundled together. An association, not a cause.</p>
+</div>
+<div class="fig-visual"><div class="net-layout"><div id="network-chart" class="chart network-chart"></div><aside id="net-detail" class="net-detail net-pop" hidden aria-live="polite" aria-label="Details of the clicked factor or ribbon"></aside></div><div class="legend net-legend"><span><strong>Click an arc or ribbon for details</strong></span><span><svg width="30" height="14" aria-hidden="true"><rect y="10" width="12" height="4" fill="#8a8378"/><rect x="16" y="0" width="14" height="14" fill="#8a8378"/></svg>Arc = one factor; thicker = more connected</span><span><svg width="60" height="12" aria-hidden="true"><defs><linearGradient id="lift-key"><stop offset="0" stop-color="rgb(233,224,230)"/><stop offset="1" stop-color="rgb(96,44,86)"/></linearGradient></defs><path d="M0 5 L60 0 V12 L0 7 Z" fill="url(#lift-key)"/></svg>Ribbon colour &amp; width = lift (1× → 3×+)</span></div></div>
+</div>
+</article>
+<article class="card wide-card scatter-card fig-card" id="v7"><p class="eyebrow">SCATTERPLOT MATRIX</p><h3>What goes along with a higher final grade?</h3>
+<div class="fig-layout">
+<div class="fig-text">
+<p>Three behaviors a school can act on: weekly study time, workday alcohol use and absences. Each cell compares the column variable (horizontal axis) with the row variable (vertical axis); the diagonal shows each variable's distribution. Every dot and bar is coloured by final grade, so look for where green gives way to amber. The bar chart under the matrix counts records at each final grade.</p>
+<ul class="fig-points">
+<li><strong>Drag a box</strong> in any cell to select records; hold <strong>Shift</strong> to add another box.</li>
+<li><strong>Click a bar</strong> in a histogram; Shift-click selects a range and Ctrl/⌘-click adds one.</li>
+<li><strong>Click a grade</strong> in the bar chart to select its records in every view.</li>
+<li>Selections from the <strong>chord diagram</strong> appear here too; <strong>Esc</strong> clears.</li>
+</ul>
 <div class="scatter-controls"><button id="matrix-clear" type="button">Clear selection</button><label class="add-toggle"><input type="checkbox" id="matrix-add">Add to selection <span>(or hold Shift)</span></label><label class="add-toggle"><input type="checkbox" id="matrix-failed">Only failed grades <span>(final grade below 10)</span></label><span id="matrix-selection" aria-live="polite"></span></div>
-<div class="matrix-layout"><div class="matrix-scroll"><div id="matrix" class="scatter-matrix"></div></div><aside class="grade-dist-panel" aria-label="Final grade distribution of the selected records"><h4>Final grade distribution</h4><div id="grade-dist" class="grade-dist"></div></aside></div><div class="legend matrix-legend"><span><i style="background:#2f6f4e"></i>Final grade ≥10</span><span><i style="background:#c4841d"></i>Final grade below 10</span><span><i style="background:#d6d1c7"></i>Outside your selection</span><span>Values are whole numbers; dots are spread slightly within each value so overlapping records stay visible. Absences above 30 days (under 1% of records) share the 30+ band. Shift-click selects a range of bars; Ctrl/⌘-click adds one. Press Esc or click empty space to clear.</span></div><p class="note">Study time and alcohol use are ordinal survey codes, not exact quantities; absences is a count of school days missed. Final grade G3 is a separate final assessment, not the average of G1 and G2. Relationships are associations, not evidence of causation.</p></article>
+<p class="note">Study time and alcohol use are ordinal survey codes, not exact quantities; absences is a count of school days missed. Final grade G3 is a separate final assessment, not the average of G1 and G2. Relationships are associations, not evidence of causation.</p>
+</div>
+<div class="fig-visual"><div class="matrix-layout"><div class="matrix-scroll"><div id="matrix" class="scatter-matrix"></div></div><aside class="grade-dist-panel" aria-label="Final grade distribution of the selected records"><h4>Final grade distribution</h4><div id="grade-dist" class="grade-dist"></div></aside></div><div class="legend matrix-legend"><span><i style="background:#2f6f4e"></i>Final grade ≥10</span><span><i style="background:#c4841d"></i>Final grade below 10</span><span><i style="background:#d6d1c7"></i>Outside your selection</span><span>Values are whole numbers; dots are spread slightly within each value so overlapping records stay visible. Absences above 30 days (under 1% of records) share the 30+ band.</span></div></div>
+</div>
+</article>
 </div>
 </section>
 
@@ -80,10 +141,6 @@
 <div id="failures" class="chart"></div>
 <p class="note">Course records, n=<span id="failure-n">1,044</span> (some students appear in both subjects). Groups with few records can produce unstable averages; the illustration is not a prediction about an individual student.</p>
 </article>
-<div class="story-grid">
-<article class="card" id="v3"><p class="eyebrow">CONTEXT &amp; BEHAVIOR</p><h3>Two kinds of disadvantage</h3><p>Mean final grade as each kind of factor accumulates.</p><div id="factors" class="chart"></div><p class="note">Each line groups the same records independently. Context and behavior are exploratory categories, not measures of personal responsibility.</p></article>
-<article class="card wide" id="v5"><p class="eyebrow">CONTEXT AND BEHAVIOR TOGETHER</p><h3>Do the two kinds of disadvantage go together?</h3><p>How records with each context factor count (columns) split across behavior factor counts (rows).</p><div id="behavior-context" class="chart progression"></div><p class="note">Each column sums to 100%: darker cells hold a larger share of that column’s records. Hover or focus a cell for its count. These are exploratory counts, not validated scales.</p></article>
-</div>
 </section>
 
 <section class="story-section" id="solution" data-num="04">
@@ -92,13 +149,6 @@
 <p class="section-summary">The recommendation uses existing records to target outreach, then tests whether the support actually helps.</p>
 <p class="section-body">Use prior-failure records to begin early outreach, assess whether internet access or guardian circumstances create additional needs, offer targeted academic support, and track later outcomes to evaluate whether the support works. The lower observed average among school-support recipients may reflect that support is assigned to students already struggling, not that support harms grades.</p>
 <div class="story-grid solution">
-<article class="card" id="tree-card">
-<p class="eyebrow">A SUPPORT CONVERSATION</p>
-<h3>Where could help begin?</h3>
-<p>An illustrative decision tree: follow the questions from left to right to reach one of eight starting points, each with record counts, mean final grades and pass shares. Answer Yes or No beside each question to reveal the next one. Both answers can be open at once to compare paths; click an open answer again to close its branch, or use Back to undo a step. Tick “Show full tree” to see every path.</p>
-<div id="tree" class="tree"></div>
-<p class="note">A transparent discussion aid, not a trained model or validated recommendation. Every student can request support.</p>
-</article>
 <article class="card" id="support-card">
 <p class="eyebrow">WHO RECEIVES SUPPORT?</p>
 <h3 id="support-title">School support does not follow disadvantage</h3>
@@ -106,6 +156,13 @@
 <p id="support-text" aria-live="polite"></p>
 <div id="support-chart" class="chart"></div>
 <p class="note" id="support-note"></p>
+</article>
+<article class="card" id="tree-card">
+<p class="eyebrow">A SUPPORT CONVERSATION</p>
+<h3>Where could help begin?</h3>
+<p>An illustrative decision tree: follow the questions from left to right to reach one of eight starting points, each with record counts, mean final grades and pass shares. Answer Yes or No beside each question to reveal the next one. Both answers can be open at once to compare paths; click an open answer again to close its branch, or use Back to undo a step. Tick “Show full tree” to see every path.</p>
+<div id="tree" class="tree"></div>
+<p class="note">A transparent discussion aid, not a trained model or validated recommendation. Every student can request support.</p>
 </article>
 </div>
 </section>

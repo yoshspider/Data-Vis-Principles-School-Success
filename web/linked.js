@@ -158,25 +158,12 @@ function drawBrushes(svg) {
 }
 
 
-// Final-grade histogram beside the matrix, drawn like the matrix's diagonal histograms: bars count
+// Final-grade histogram below the matrix, drawn like the matrix's diagonal histograms: bars count
 // every record (grey once something is selected) with the selected records on top in green / amber.
-// Each grade row is clickable and selects those records across the linked views.
-// It stands as a tall column: grade 0 level with the bottom row of cells and 20 level with the top
-// row, axis on the right and bars growing left. It is drawn in screen pixels so it can line up with
-// the matrix, and is redrawn on resize.
-const DIST_FALLBACK_H = 420, DIST_AXIS = 26, DIST_LEFT = 4, DIST_FOOT = 16;
-
-// Top and height (in pixels, relative to the chart container) that match the matrix cells; when the
-// panel sits below the matrix on narrow screens, a fixed height is used instead.
-function distFrame(el) {
-  const matrixSvg = $('matrix').querySelector('svg');
-  const box = el.getBoundingClientRect(), size = OFFSET + matrixVariables.length * CELL;
-  if (!matrixSvg) return {top: 4, height: DIST_FALLBACK_H};
-  const m = matrixSvg.getBoundingClientRect(), scale = m.height / size;
-  const top = m.top + (OFFSET + 3) * scale - box.top, bottom = m.top + (size - 3) * scale - box.top;
-  const isBeside = m.right <= box.left && top >= 0 && bottom - top > 200;
-  return isBeside ? {top, height: bottom - top} : {top: 4, height: DIST_FALLBACK_H};
-}
+// Each grade column is clickable and selects those records across the linked views.
+// Vertical bars: grade 0 to 20 runs left to right along the bottom, record counts up the left side.
+// It is drawn in screen pixels and redrawn on resize.
+const DIST_H = 100, DIST_LEFT = 38, DIST_RIGHT = 8, DIST_TOP = 8, DIST_FOOT = 40;
 
 // Roughly three gridlines whatever the counts are.
 const niceStep = max => [5, 10, 20, 25, 50, 100, 200, 250, 500].find(step => max / step <= 4) || 1000;
@@ -189,24 +176,26 @@ function drawGradeDist(selected, hasSelection) {
   if (!rows.length) { el.innerHTML = '<p class="dist-summary">No records in this view.</p>'; return; }
   const focusedGrade = document.activeElement && document.activeElement.closest && document.activeElement.closest('.dist-row');
   el.innerHTML = '';
-  const {top: T, height: ph} = distFrame(el);
-  const W = el.clientWidth || 170, H = T + ph + DIST_FOOT, axis = W - DIST_AXIS, pw = axis - DIST_LEFT, bh = ph / 21;
+  const W = el.clientWidth || 640, ph = DIST_H, H = DIST_TOP + ph + DIST_FOOT, pw = W - DIST_LEFT - DIST_RIGHT, bw = pw / 21;
   const tally = a => { const c = Array(21).fill(0); a.forEach(r => c[r.G3]++); return c; };
   const all = tally(rows), sel = tally(selected);
   const step = niceStep(Math.max(1, ...all)), max = Math.max(step, Math.ceil(Math.max(1, ...all) / step) * step);
-  const rowTop = g => T + (20 - g) * bh, x = n => axis - n / max * pw, gradeFill = g => g >= PASS_GRADE ? teal : orange;
-  const bar = (g, n, fill, cls) => n ? `<rect class="${cls}" x="${x(n).toFixed(1)}" y="${(rowTop(g) + 1).toFixed(1)}" width="${(axis - x(n)).toFixed(1)}" height="${Math.max(1, bh - 2).toFixed(1)}" fill="${fill}"/>` : '';
-  let svg = `<svg class="${hasSelection ? 'has-selection' : ''}" width="${W}" height="${H.toFixed(0)}" viewBox="0 0 ${W} ${H.toFixed(1)}" role="group" aria-label="Final grade distribution; click a grade to select its records">`;
-  for (let n = step; n <= max; n += step) svg += `<line x1="${x(n)}" x2="${x(n)}" y1="${T}" y2="${T + ph}" stroke="#e4ded2"/><text x="${n === max ? 0 : x(n)}" y="${T + ph + 12}" text-anchor="${n === max ? 'start' : 'middle'}">${n}</text>`;
+  const colLeft = g => DIST_LEFT + g * bw, base = DIST_TOP + ph, y = n => base - n / max * ph;
+  const gradeFill = g => g >= PASS_GRADE ? teal : orange;
+  const bar = (g, n, fill, cls) => n ? `<rect class="${cls}" x="${(colLeft(g) + 1).toFixed(1)}" y="${y(n).toFixed(1)}" width="${Math.max(1, bw - 2).toFixed(1)}" height="${(base - y(n)).toFixed(1)}" fill="${fill}"/>` : '';
+  let svg = `<svg class="${hasSelection ? 'has-selection' : ''}" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="group" aria-label="Final grade distribution; click a grade to select its records">`;
+  for (let n = step; n <= max; n += step) svg += `<line x1="${DIST_LEFT}" x2="${W - DIST_RIGHT}" y1="${y(n)}" y2="${y(n)}" stroke="#e4ded2"/><text x="${DIST_LEFT - 6}" y="${(y(n) + 4).toFixed(1)}" text-anchor="end">${n}</text>`;
+  svg += `<text x="${DIST_LEFT - 6}" y="${(base + 4).toFixed(1)}" text-anchor="end">0</text>`;
   all.forEach((n, g) => {
     svg += bar(g, n, gradeFill(g), 'dist-base') + (hasSelection ? bar(g, sel[g], gradeFill(g), 'dist-sel') : '');
     const isSelected = matrixBrushes.some(b => isSameGrade(b, g));
     const tip = `Final grade ${g}: ${n} course records${hasSelection ? `, ${sel[g]} of them selected` : ''}. Click or press Enter to select them.`;
-    svg += mark('rect', `class="dist-row${isSelected ? ' is-selected' : ''}" data-grade="${g}" aria-pressed="${isSelected}" x="${DIST_LEFT}" y="${rowTop(g).toFixed(1)}" width="${axis - DIST_LEFT}" height="${bh.toFixed(1)}"`, tip, false);
+    svg += mark('rect', `class="dist-row${isSelected ? ' is-selected' : ''}" data-grade="${g}" aria-pressed="${isSelected}" x="${colLeft(g).toFixed(1)}" y="${DIST_TOP}" width="${bw.toFixed(1)}" height="${ph}"`, tip, false);
   });
-  svg += `<line x1="${axis}" x2="${axis}" y1="${T}" y2="${T + ph}" stroke="#a39d92"/>`;
-  [0, 5, 10, 15, 20].forEach(g => svg += `<text class="${g % 10 ? '' : 'dist-major'}" x="${axis + 5}" y="${(rowTop(g) + bh / 2 + 4).toFixed(1)}">${g}</text>`);
-  svg += `<text x="${axis}" y="${T + ph + 12}" text-anchor="middle">0</text></svg>`;
+  svg += `<line x1="${DIST_LEFT}" x2="${W - DIST_RIGHT}" y1="${base}" y2="${base}" stroke="#a39d92"/>`;
+  const every = bw >= 16;
+  for (let g = 0; g <= 20; g++) if (every || g % 5 === 0) svg += `<text class="${g % 10 ? '' : 'dist-major'}" x="${(colLeft(g) + bw / 2).toFixed(1)}" y="${base + 16}" text-anchor="middle">${g}</text>`;
+  svg += `<text class="dist-axis" x="${(DIST_LEFT + pw / 2).toFixed(1)}" y="${base + 36}" text-anchor="middle">Final grade (G3)</text></svg>`;
   const shown = hasSelection ? selected : rows;
   const pass = shown.filter(r => r.G3 >= PASS_GRADE).length, high = shown.filter(r => r.G3 >= 14).length;
   const summary = shown.length
