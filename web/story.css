@@ -42,7 +42,6 @@ body.story{--story-paper:#f4f0e8;--story-surface:#fffdf8;--story-line:#d8d1c5;ba
 .story .card>.chart{margin-bottom:8px}
 .story #failures{max-width:1000px;margin:0 auto 8px}
 .story #internet{max-width:100%;margin:0 auto 8px}
-.story #support-chart{max-width:100%}
 .story .dots{display:none}
 .story-grid.rising{grid-template-columns:1fr 1fr}
 .story-grid .wide-card{grid-column:1/-1}
@@ -60,10 +59,6 @@ body.story{--story-paper:#f4f0e8;--story-surface:#fffdf8;--story-line:#d8d1c5;ba
 .sankey-panel{margin-top:14px}
 .sankey-panel h4{margin:0 0 4px;font-size:15px;color:var(--ink)}
 .sankey-panel h4 span{font-weight:400;font-size:12px;color:var(--muted);margin-left:6px}
-.support-toggle{display:inline-flex;gap:0;margin:0 0 14px;border:1px solid var(--story-line);border-radius:999px;overflow:hidden;background:#fff}
-.support-toggle button{border:0;background:transparent;padding:8px 18px;font:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;border-radius:0}
-.support-toggle button[aria-pressed="true"]{background:var(--ink);color:#fff}
-.support-toggle button:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
 .matrix-layout{display:block}
 .grade-dist-panel{max-width:1240px;margin:18px auto 6px;padding-top:14px;border-top:1px solid var(--line)}
 .grade-dist-panel h4{margin:0 0 6px;font-size:14px;line-height:1.3;color:var(--ink)}
@@ -146,10 +141,9 @@ html{scroll-behavior:smooth}
 .geo-bridge{font:600 23px/1.35 Georgia,serif;max-width:720px;margin:0 0 16px}
 .story-reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease var(--reveal-delay,0ms),transform .7s cubic-bezier(.22,.61,.36,1) var(--reveal-delay,0ms)}
 .story-reveal.is-visible{opacity:1;transform:none}
-#support-chart svg{animation:story-chart-in .35s ease}
 @keyframes story-chart-in{from{opacity:.35}to{opacity:1}}
 @media(max-width:760px){.geo-layout{grid-template-columns:1fr}.geo-context{border-left:0;border-top:1px solid var(--story-line);padding:22px}.geo-context h4{min-height:0;font-size:31px}.geo-context .geo-school{min-height:0}#school-map{min-height:320px;max-height:420px}.geo-heading{align-items:flex-start}.geo-heading h3{font-size:23px!important}.geo-pop{margin-top:0}.geo-controls button{flex:1;min-width:100px}.geo-heading button{padding:7px 9px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.story-reveal{opacity:1;transform:none;transition:none}#support-chart svg{animation:none}.geo-municipality{transition:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.story-reveal{opacity:1;transform:none;transition:none}.geo-municipality{transition:none}}
 
 /* Section bands: each part of the story gets its own full-bleed ground, like the example projects.
    The band runs edge to edge while the text keeps the column width of main. */

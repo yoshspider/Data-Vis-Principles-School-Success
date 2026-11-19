@@ -12,14 +12,6 @@ const TIPS = {
     idea: 'One recorded failure is where grades drop: the mean final grade falls from 12.1 with no past failures to 8.4 with one, then only drifts (7.5, 6.8).',
     tip: 'Hover a step for its mean and group size. The groups with two or three failures hold about 30 records each, so read them loosely.'
   },
-  v2: {
-    idea: 'School support does not follow disadvantage: 11 to 13% of students receive it whether they have 0, 1 or 2 context factors, and the share falls to 7% at 4.',
-    tip: 'Switch the dropdown to family support, which falls from 70% to 43% across the same columns. Hover a bar for its count.'
-  },
-  'support-card': {
-    idea: 'School support does not follow disadvantage: 11 to 13% of students receive it whether they have 0, 1 or 2 context factors, and the share falls to 7% at 4.',
-    tip: 'Press Family support to compare: it falls from 70% to 43% across the same columns. Hover a bar for its count.'
-  },
   v4: {
     idea: 'The first question does most of the work: a first-period grade below 10 marks a group that passes 36% of the time, against 95% for everyone else.',
     tip: 'Answer Yes or No beside a question to walk one path, or tick Show full tree to compare all eight starting points at once.'

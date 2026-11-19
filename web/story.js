@@ -224,33 +224,6 @@ function higherSankey(){
   applySankeyStage();
 }
 
-let currentSupport='schoolsup';
-function supportChart(key){
-  currentSupport=key;
-  const school=key==='schoolsup', name=school?'school':'family';
-  const g=groups(context), has=a=>a.filter(r=>r[key]==='yes'), no=a=>a.filter(r=>r[key]==='no');
-  percentBars('support-chart',['0','1','2','3','4'],[
-    {name:`${school?'School':'Family'} support received`,color:teal,values:g.map(has)},
-    {name:`No ${name} support`,color:orange,values:g.map(no)}
-  ],`Percent of course records with and without ${name} support, by context factor count`,'Context factor count');
-  const share=rows=>rows.length?100*has(rows).length/rows.length:null;
-  const low=records.filter(r=>context(r)<=1), high=records.filter(r=>context(r)>=3);
-  const pct=v=>v===null?'—':v.toFixed(0)+'%';
-  const lo=share(low), hi=share(high);
-  const title=$('support-title'), text=$('support-text'), note=$('support-note');
-  if(school){
-    title.textContent='School support does not follow disadvantage';
-    text.innerHTML=`<strong>${pct(lo)}</strong> of students with 0–1 disadvantages get school support, and <strong>${pct(hi)}</strong> with 3–4.`;
-    note.textContent='School support is a yes/no record, not a measure of how much help was given. Groups with three or four factors are small, so their shares are unstable. Differences cannot measure the benefit of support.';
-  }else{
-    title.textContent='Family support is highest with the fewest disadvantages';
-    text.innerHTML=`<strong>${pct(lo)}</strong> of students with 0–1 disadvantages get family support, but only <strong>${pct(hi)}</strong> with 3–4.`;
-    note.textContent='Family support is a yes/no record, not a measure of how much help was given. Groups with three or four factors are small, so their shares are unstable. This is an association, not a cause.';
-  }
-  document.querySelectorAll('.support-toggle button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.support===key)));
-}
-document.addEventListener('click',e=>{const b=e.target.closest('.support-toggle button');if(b)supportChart(b.dataset.support);});
-
 // The overview filters (subject, school) change only these four statistics; every chart below keeps using all records.
 function updateStats(){
   const subject=$('subject').value, school=$('school').value;
@@ -268,7 +241,6 @@ function render(){
   boxCharts();
   staircase();
   statBand();
-  supportChart(currentSupport);
   higherSankey();
   tree();
   if(window.drawLinkedViews)window.drawLinkedViews(records);
