@@ -307,6 +307,9 @@ html{overflow-x:clip}   /* the bands are 100vw wide, which includes the scrollba
 .fig-text .scatter-controls{flex-direction:column;align-items:flex-start;gap:12px;border:0;padding:0 0 12px;margin:0}
 .fig-text #network-selection,.fig-text #matrix-selection{margin-left:0;padding-bottom:0}
 .fig-text .net-threshold,.fig-text .scatter-controls .add-toggle{padding-bottom:0}
+.fig-text .scatter-controls .add-toggle{flex-wrap:wrap;column-gap:8px;row-gap:0}
+.fig-text .net-threshold-stack{flex-direction:column;align-items:flex-start!important;gap:6px;line-height:1.4}
+.fig-text .net-threshold-stack input{width:100%;max-width:220px;margin:0}
 .fig-text #net-callout{font-size:13px;line-height:1.7;margin:0 0 8px}
 .fig-text .note{margin:12px 0 0;padding-top:12px;border-top:1px solid #f3efe7;font-size:11.5px;line-height:1.5;color:var(--muted)}
 .fig-visual{display:flex;flex-direction:column;align-items:center}
@@ -315,13 +318,23 @@ html{overflow-x:clip}   /* the bands are 100vw wide, which includes the scrollba
 .fig-visual .legend{justify-content:center;font-size:11.5px;gap:8px 16px}
 @media(max-width:900px){.fig-layout{grid-template-columns:1fr}}
 @media(min-width:901px){
-  /* a third smaller than before: chord by height, matrix and grade chart by height */
-  .story .net-layout .network-chart svg{max-height:max(300px,calc((100svh - 130px) * .67))}
+  /* Sized to the screen height so each figure fits one viewport while staying large enough to click and drag in. */
+  .story .net-layout .network-chart svg{max-height:max(420px,calc(100svh - 150px))}
   .story .network-chart svg text{font-size:15px}
   .story .network-chart svg .net-group{font-size:12px}
-  .story .scatter-matrix{width:min(100%,max(330px,calc((100svh - 400px) * .67)))}
-  .story .grade-dist-panel{width:min(100%,max(330px,calc((100svh - 400px) * .67)))}
-  .story .scatter-matrix text{font-size:17px}
+  .story .scatter-matrix{width:min(100%,max(420px,calc(100svh - 260px)),640px)}
+  .story .grade-dist-panel{width:min(100%,max(420px,calc(100svh - 260px)),640px)}
+  /* The chord's text column is short, so it can be narrower and leave the circle more room. */
+  #network .fig-layout,#v7 .fig-layout{grid-template-columns:minmax(220px,280px) minmax(0,1fr)}
+  .story .scatter-matrix text{font-size:14px}
   .story .scatter-matrix .matrix-label{font-size:15px}
   .story .scatter-matrix .distribution-label{font-size:13px}
+}
+
+/* Wide screens: the grade chart sits beside the matrix instead of under it, so the larger matrix and
+   its linked grade chart still fit one screen. Narrower screens keep the chart under the matrix. */
+@media(min-width:1200px){
+  .story #v7 .matrix-layout{display:grid;grid-template-columns:minmax(0,min(max(420px,calc(100svh - 260px)),640px)) minmax(260px,1fr);gap:20px;align-items:end}
+  .story #v7 .scatter-matrix{width:100%}
+  .story #v7 .grade-dist-panel{width:auto;margin:0;padding-top:0;border-top:0}
 }

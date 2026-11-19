@@ -95,29 +95,28 @@
 <article class="card wide-card fig-card" id="network"><p class="eyebrow">HOW DISADVANTAGES CONNECT</p><h3>Which disadvantages travel together?</h3>
 <div class="fig-layout">
 <div class="fig-text">
-<p>Each arc around the circle is a risk factor: context factors on the left, behavior factors on the right and past failure at the bottom. A ribbon joins two factors that occur together more often than chance, and its colour and width show how much more often (the lift).</p>
+<p>Each arc is a risk factor. A ribbon joins two factors that show up together more often than chance; the darker and wider the ribbon, the stronger the link.</p>
 <ul class="fig-points">
-<li><strong>Click</strong> an arc or ribbon to see its record count and pass rate.</li>
-<li>The same records are <strong>selected in the matrix</strong> below.</li>
-<li><strong>Drag the lift slider</strong> to the right to keep only the strongest ties.</li>
-<li><strong>Esc</strong>, or a click on empty space, clears the selection.</li>
+<li><strong>Click</strong> an arc or ribbon for its numbers; the same records are selected in the matrix below.</li>
+<li><strong>Drag the slider</strong> right to keep only the strongest links.</li>
+<li><strong>Esc</strong> or a click on empty space clears.</li>
 </ul>
-<div class="scatter-controls"><button id="network-clear" type="button">Clear selection</button><label class="net-threshold">Minimum lift <output id="net-lift-value">1.3×</output><input type="range" id="net-lift" min="1" max="2.5" step="0.1" value="1.3"></label><span id="network-selection" aria-live="polite"></span></div>
+<div class="scatter-controls"><button id="network-clear" type="button">Clear selection</button><label class="net-threshold net-threshold-stack"><span>Show pairs at least <output id="net-lift-value">1.3×</output> more often than chance</span><input type="range" id="net-lift" min="1" max="2.5" step="0.1" value="1.3" aria-label="Minimum times more often than chance"></label><span id="network-selection" aria-live="polite"></span></div>
 <div id="net-callout"></div>
-<p class="note">Lift 2× = twice as often as chance (pairs with at least 10 shared records). Every factor gets an equal arc length; record counts and pass rates appear in a box when you click it. Arc thickness is the connection score: the sum of (lift − 1) over the ties shown. Ties between the same two groups are bundled together. An association, not a cause.</p>
+<p class="note">2× = the two factors occur together twice as often as if they were unrelated (pairs with at least 10 shared records). Thicker arcs have more and stronger links. An association, not a cause.</p>
 </div>
-<div class="fig-visual"><div class="net-layout"><div id="network-chart" class="chart network-chart"></div><aside id="net-detail" class="net-detail net-pop" hidden aria-live="polite" aria-label="Details of the clicked factor or ribbon"></aside></div><div class="legend net-legend"><span><strong>Click an arc or ribbon for details</strong></span><span><svg width="30" height="14" aria-hidden="true"><rect y="10" width="12" height="4" fill="#8a8378"/><rect x="16" y="0" width="14" height="14" fill="#8a8378"/></svg>Arc = one factor; thicker = more connected</span><span><svg width="60" height="12" aria-hidden="true"><defs><linearGradient id="lift-key"><stop offset="0" stop-color="rgb(233,224,230)"/><stop offset="1" stop-color="rgb(96,44,86)"/></linearGradient></defs><path d="M0 5 L60 0 V12 L0 7 Z" fill="url(#lift-key)"/></svg>Ribbon colour &amp; width = lift (1× → 3×+)</span></div></div>
+<div class="fig-visual"><div class="net-layout"><div id="network-chart" class="chart network-chart"></div><aside id="net-detail" class="net-detail net-pop" hidden aria-live="polite" aria-label="Details of the clicked factor or ribbon"></aside></div><div class="legend net-legend"><span><svg width="30" height="14" aria-hidden="true"><rect y="10" width="12" height="4" fill="#8a8378"/><rect x="16" y="0" width="14" height="14" fill="#8a8378"/></svg>Arc = one factor; thicker = more connected</span><span><svg width="60" height="12" aria-hidden="true"><defs><linearGradient id="lift-key"><stop offset="0" stop-color="rgb(233,224,230)"/><stop offset="1" stop-color="rgb(96,44,86)"/></linearGradient></defs><path d="M0 5 L60 0 V12 L0 7 Z" fill="url(#lift-key)"/></svg>Ribbon colour &amp; width = times more often than chance (1× → 3×+)</span></div></div>
 </div>
 </article>
 <article class="card wide-card scatter-card fig-card" id="v7"><p class="eyebrow">SCATTERPLOT MATRIX</p><h3>What goes along with a higher final grade?</h3>
 <div class="fig-layout">
 <div class="fig-text">
-<p>Three behaviors a school can act on: weekly study time, workday alcohol use and absences. Each cell compares the column variable (horizontal axis) with the row variable (vertical axis); the diagonal shows each variable's distribution. Every dot and bar is coloured by final grade, so look for where green gives way to amber. The bar chart under the matrix counts records at each final grade.</p>
+<p>Three behaviors a school can act on. Each cell plots one against another, and the diagonal shows each one's spread. Colour is the final grade: green passed (10+), amber did not. The final-grade bar chart counts records at each grade.</p>
 <ul class="fig-points">
-<li><strong>Drag a box</strong> in any cell to select records; hold <strong>Shift</strong> to add another box.</li>
-<li><strong>Click a bar</strong> in a histogram; Shift-click selects a range and Ctrl/⌘-click adds one.</li>
-<li><strong>Click a grade</strong> in the bar chart to select its records in every view.</li>
-<li>Selections from the <strong>chord diagram</strong> appear here too; <strong>Esc</strong> clears.</li>
+<li><strong>Drag a box</strong> in a cell to select; <strong>Shift</strong> adds a box.</li>
+<li><strong>Click a bar</strong>; Shift-click selects a range, Ctrl/⌘-click adds one.</li>
+<li><strong>Click a grade</strong> in the bar chart to select it everywhere.</li>
+<li>Chord-diagram selections show here too; <strong>Esc</strong> clears.</li>
 </ul>
 <div class="scatter-controls"><button id="matrix-clear" type="button">Clear selection</button><label class="add-toggle"><input type="checkbox" id="matrix-add">Add to selection <span>(or hold Shift)</span></label><label class="add-toggle"><input type="checkbox" id="matrix-failed">Only failed grades <span>(final grade below 10)</span></label><span id="matrix-selection" aria-live="polite"></span></div>
 <p class="note">Study time and alcohol use are ordinal survey codes, not exact quantities; absences is a count of school days missed. Final grade G3 is a separate final assessment, not the average of G1 and G2. Relationships are associations, not evidence of causation.</p>

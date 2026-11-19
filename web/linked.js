@@ -460,7 +460,7 @@ function networkNode(node, i, stats, conn) {
 }
 
 function networkEdge(link) {
-  const tip = `${pairLabel(link)}: ${link.n} course records have both, ${link.lift.toFixed(2)}× what independence predicts; ${pct(link.pass)} reach a final grade ≥10. Click or press Enter for details.`;
+  const tip = `${pairLabel(link)}: ${link.n} course records have both, ${link.lift.toFixed(1)}× more often than chance; ${pct(link.pass)} reach a final grade ≥10. Click or press Enter for details.`;
   const keys = `data-a="${FACTORS[link.a].key}" data-b="${FACTORS[link.b].key}"`;
   return `<g class="net-edge" ${keys}>`
     + mark('path', `class="net-link" d="${ribbonPath(link)}" fill="${liftColor(link.lift)}" data-ai="${link.a}" data-bi="${link.b}" ${keys}`, esc(tip), false) + '</g>';
@@ -470,9 +470,7 @@ function networkCallout(stats, conn) {
   const strongest = stats.pairs.filter(p => p.n >= NET_MIN_PAIR).sort((x, y) => y.lift - x.lift)[0];
   if (!strongest) return '<p class="net-callout">Too few records in this view to compare factor pairs.</p>';
   const [a, b] = [FACTORS[strongest.a], FACTORS[strongest.b]];
-  const hub = conn.scores.indexOf(Math.max(...conn.scores));
-  const hubText = conn.scores[hub] > 0 ? ` · Most connected: <strong>${esc(FACTORS[hub].label)}</strong> (${tieCount(conn.ties[hub].length)})` : '';
-  return `<p class="net-callout">Strongest tie: <strong>${esc(a.label)} + ${esc(b.label)}</strong>, ${strongest.lift.toFixed(1)}× chance · ${pct(strongest.pass)} pass vs ${pct(stats.pass)} overall <button type="button" id="net-strongest" data-a="${a.key}" data-b="${b.key}">Select</button>${hubText}</p>`;
+  return `<p class="net-callout">Strongest tie: <strong>${esc(a.label)} + ${esc(b.label)}</strong>, ${strongest.lift.toFixed(1)}× more often than chance <button type="button" id="net-strongest" data-a="${a.key}" data-b="${b.key}">Select</button></p>`;
 }
 
 function network() {
@@ -507,7 +505,7 @@ function nodeDetail(i) {
   return `${closeButton}<h4>${esc(node.label)}</h4>`
     + `<p><strong>${node.n}</strong> records · <strong>${node.n ? pct(node.pass) : '—'}</strong> reach 10+ <small>(${pct(stats.pass)} overall)</small></p>`
     + (node.n ? passBar(node.pass) : '')
-    + (ties.length ? `<p class="net-sub">Travels with</p><ul class="net-ties">${chips}${more}</ul>` : '<p class="net-sub">No ties at this minimum lift.</p>')
+    + (ties.length ? `<p class="net-sub">Travels with (× more often than chance)</p><ul class="net-ties">${chips}${more}</ul>` : '<p class="net-sub">No links at this slider setting.</p>')
     + deselectButton;
 }
 
@@ -516,7 +514,7 @@ function pairDetail(a, b) {
   if (!pair) return '';
   const expected = A.n * B.n / stats.total;
   return `${closeButton}<h4>${esc(A.label)} + ${esc(B.label)}</h4>`
-    + `<p><strong>${pair.n}</strong> records have both · <strong>${pair.lift.toFixed(1)}×</strong> chance <small>(${expected.toFixed(1)} expected)</small></p>`
+    + `<p><strong>${pair.n}</strong> records have both · <strong>${pair.lift.toFixed(1)}×</strong> more often than chance <small>(${expected.toFixed(1)} expected)</small></p>`
     + `<p><strong>${pct(pair.pass)}</strong> reach 10+ <small>(${pct(stats.pass)} overall)</small></p>` + passBar(pair.pass) + deselectButton;
 }
 

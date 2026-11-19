@@ -45,7 +45,7 @@ const TIPS = {
   },
   network: {
     idea: 'The strongest tie in the data joins no higher-education plans with a past failure, about 3× what chance predicts; weekday and weekend drinking is next at 2.4×.',
-    tip: 'Click an arc or ribbon: its records light up in the matrix below. Drag the lift slider to the right to keep only the strongest ties.'
+    tip: 'Click an arc or ribbon: its records light up in the matrix below. Drag the slider to the right to keep only the pairs that occur together most often.'
   },
   v7: {
     idea: 'Of the three behaviors, study time separates grades most: pass rates climb from 73% at under two hours a week to 86% at five to ten. Absences only bite above 15 days (63% pass).',
