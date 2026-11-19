@@ -301,9 +301,8 @@ html{overflow-x:clip}   /* the bands are 100vw wide, which includes the scrollba
 .fig-layout{display:grid;grid-template-columns:minmax(250px,340px) minmax(0,1fr);gap:clamp(22px,3.5vw,48px);align-items:start;margin-top:6px}
 .fig-text,.fig-visual{min-width:0}
 .fig-text>p{margin:0 0 12px;font-size:14px;line-height:1.6;color:var(--muted)}
-.fig-points{margin:0 0 16px;padding-left:20px;font-size:13.5px;line-height:1.5;color:var(--ink)}
-.fig-points li{margin:0 0 7px}
-.fig-points li::marker{color:var(--teal)}
+/* One short line of how-to under a figure's intro; the full instructions live in the "?" pop-up. */
+.fig-hint{margin:0 0 14px;font-size:12.5px;font-weight:600;color:var(--teal)}
 .fig-text .scatter-controls{flex-direction:column;align-items:flex-start;gap:12px;border:0;padding:0 0 12px;margin:0}
 .fig-text #network-selection,.fig-text #matrix-selection{margin-left:0;padding-bottom:0}
 .fig-text .net-threshold,.fig-text .scatter-controls .add-toggle{padding-bottom:0}
@@ -338,3 +337,8 @@ html{overflow-x:clip}   /* the bands are 100vw wide, which includes the scrollba
   .story #v7 .scatter-matrix{width:100%}
   .story #v7 .grade-dist-panel{width:auto;margin:0;padding-top:0;border-top:0}
 }
+
+/* Section 04 recommendation as four short steps instead of a paragraph. */
+.steps{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 30px;padding:0;list-style:none;counter-reset:step}
+.steps li{counter-increment:step;display:flex;align-items:center;gap:8px;padding:8px 14px 8px 8px;border-radius:999px;background:rgba(255,255,255,.7);font-size:14px;color:var(--ink)}
+.steps li::before{content:counter(step);display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--teal);color:#fff;font-size:12px;font-weight:700}

@@ -201,7 +201,7 @@ function drawGradeDist(selected, hasSelection) {
   const summary = shown.length
     ? `<strong>${hasSelection ? `${shown.length.toLocaleString()} selected` : `All ${shown.length.toLocaleString()}`}</strong> · mean ${fmt(mean(shown))}<br>${(100 * (shown.length - pass) / shown.length).toFixed(0)}% below 10 · ${(100 * high / shown.length).toFixed(0)}% at 14+`
     : '<strong>0 selected</strong>';
-  el.innerHTML = `${svg}<p class="dist-summary">${summary}</p><p class="dist-note">Records per grade · click a grade to select</p>`;
+  el.innerHTML = `${svg}<p class="dist-summary">${summary}</p><p class="dist-note">Click a grade to select it</p>`;
   if (focusedGrade) {
     const again = el.querySelector(`.dist-row[data-grade="${focusedGrade.dataset.grade}"]`);
     if (again) again.focus();
@@ -228,8 +228,8 @@ function updateMatrixSelection() {
   const pass = selected.filter(r => r.G3 >= PASS_GRADE).length;
   const parts = matrixBrushes.length > 1 ? ` in ${matrixBrushes.length} selections` : '';
   const summary = `${selected.length.toLocaleString()} of ${total} selected${parts} · mean final grade ${fmt(mean(selected))} · ${selected.length ? (100 * pass / selected.length).toFixed(0) + '% ≥10' : '—'}`;
-  $('matrix-selection').textContent = hasSelection ? summary : `${total} ${matrixNoun()} · drag a box in any cell or click a bar to select`;
-  $('network-selection').textContent = hasSelection ? summary : `${total} ${matrixNoun()} · click an arc or ribbon to select`;
+  $('matrix-selection').textContent = hasSelection ? summary : `${total} ${matrixNoun()}`;
+  $('network-selection').textContent = hasSelection ? summary : `${total} ${matrixNoun()}`;
 }
 
 function scheduleSelectionUpdate() {

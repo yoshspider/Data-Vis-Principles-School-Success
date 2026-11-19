@@ -1,7 +1,8 @@
 'use strict';
-// One "Big idea / Try this" pop-up per interactive chart, keyed by the card's id. The
-// higher-education Sankey has no entry on purpose. Every number comes from the 1,044
-// combined course records (see the methodology panel for the factor definitions).
+// One pop-up per chart, keyed by the card's id: "Big idea", "Try this" and "How to read".
+// The card's small-print notes (.note) move into "How to read" so the card itself stays short;
+// moved notes keep their ids, so scripts that rewrite them still work. Every number comes from
+// the 1,044 combined course records (see the methodology panel for the factor definitions).
 const TIPS = {
   v1: {
     idea: 'One recorded failure is where grades drop: the mean final grade falls from 12.1 with no past failures to 8.4 with one, then only drifts (7.5, 6.8).',
@@ -43,25 +44,36 @@ const TIPS = {
     idea: 'Paid classes show no grade advantage: students taking them average 11.0 and those who do not average 11.4, so paid-class records score slightly lower (medians 11 and 12).',
     tip: 'Hover a box for its quartiles and n. Students who struggle may be the ones who take paid classes, so this gap says nothing about whether they help. Use the arrows to flip back.'
   },
+  'higher-card': {
+    tip: 'Use the arrows beside G1, G2 and G3 (or Next in the pop-up) to step through the periods. Hover a ribbon for its share.'
+  },
   network: {
     idea: 'The strongest tie in the data joins no higher-education plans with a past failure, about 3× what chance predicts; weekday and weekend drinking is next at 2.4×.',
     tip: 'Click an arc or ribbon: its records light up in the matrix below. Drag the slider to the right to keep only the pairs that occur together most often.'
   },
   v7: {
     idea: 'Of the three behaviors, study time separates grades most: pass rates climb from 73% at under two hours a week to 86% at five to ten. Absences only bite above 15 days (63% pass).',
-    tip: 'Drag a box in any cell or click a histogram bar; the same records stay coloured in every other cell. Tick Only failed grades to focus on the amber dots.'
+    tip: 'Drag a box in any cell (Shift adds a box) or click a histogram bar (Shift-click selects a range, Ctrl/⌘-click adds one). Click a grade in the bar chart to select it everywhere. Tick Only failed grades to focus on the amber dots; Esc clears.'
   }
 };
 
-function tipPop(text) {
+// Builds the pop-up with whichever parts exist; `notes` are the card's .note elements, moved in.
+function tipPop(text, notes) {
   const pop = document.createElement('div');
   pop.className = 'tip-pop';
   pop.hidden = true;
   pop.setAttribute('role', 'dialog');
-  pop.setAttribute('aria-label', 'Big idea and tip for this chart');
-  pop.innerHTML = `<p class="tip-kicker">Big idea</p><p class="tip-text">${text.idea}</p>`
-    + `<p class="tip-kicker">Try this</p><p class="tip-text">${text.tip}</p>`
+  pop.setAttribute('aria-label', 'About this chart');
+  pop.innerHTML = (text.idea ? `<p class="tip-kicker">Big idea</p><p class="tip-text">${text.idea}</p>` : '')
+    + (text.tip ? `<p class="tip-kicker">Try this</p><p class="tip-text">${text.tip}</p>` : '')
     + '<button type="button" class="tip-close" aria-label="Close">×</button>';
+  if (notes.length) {
+    const kicker = document.createElement('p');
+    kicker.className = 'tip-kicker';
+    kicker.textContent = 'How to read';
+    pop.insertBefore(kicker, pop.querySelector('.tip-close'));
+    notes.forEach(note => pop.insertBefore(note, pop.querySelector('.tip-close')));
+  }
   return pop;
 }
 
@@ -82,9 +94,9 @@ function addTip(card, text) {
   button.type = 'button';
   button.className = 'tip-button';
   button.setAttribute('aria-expanded', 'false');
-  button.setAttribute('aria-label', 'Big idea and tip for this chart');
+  button.setAttribute('aria-label', 'About this chart');
   button.textContent = '?';
-  const pop = tipPop(text);
+  const pop = tipPop(text, [...card.querySelectorAll('.note')]);
   anchor.append(button, pop);
   heading.classList.add('has-tip');          // lifts the title above the paragraph under it, so the pop-up is not covered
   heading.appendChild(anchor);

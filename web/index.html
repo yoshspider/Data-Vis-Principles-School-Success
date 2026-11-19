@@ -29,7 +29,7 @@
 <article class="card geo-card" id="school-geography">
 <div class="geo-heading"><div><p class="eyebrow">THE PLACES BEHIND THE RECORDS</p><h3>A closer look at where we begin</h3></div><button type="button" id="geo-replay">Replay journey ↻</button></div>
 <div class="geo-layout"><div class="geo-map-wrap"><svg id="school-map" viewBox="0 0 820 560" role="img" aria-label="Animated map locating Gabriel Pereira school in Évora and Mouzinho da Silveira school in Portalegre, Portugal"></svg><div class="geo-map-meta"><span id="geo-map-caption">WESTERN EUROPE</span><span>↑ N</span></div></div>
-<aside class="geo-context"><p class="eyebrow" id="geo-step">01 / FIND THE COUNTRY</p><h4 id="geo-title">Portugal</h4><p id="geo-description">Two secondary schools, in two cities in the Alentejo region. Zoom in to meet the communities behind the data.</p><div class="geo-pop" id="geo-pop"><strong>2</strong><span>schools in the study</span></div><p class="geo-school" id="geo-school">Gabriel Pereira · GP<br>Mouzinho da Silveira · MS</p><p class="geo-footnote" id="geo-footnote">School dots use published GPS coordinates. The map is geographic context, not a map of students’ homes.</p></aside></div>
+<aside class="geo-context"><p class="eyebrow" id="geo-step">01 / FIND THE COUNTRY</p><h4 id="geo-title">Portugal</h4><p id="geo-description">Two secondary schools, in two cities in the Alentejo region. Zoom in to meet the communities behind the data.</p><div class="geo-pop" id="geo-pop"><strong>2</strong><span>schools in the study</span></div><p class="geo-school" id="geo-school">Gabriel Pereira · GP<br>Mouzinho da Silveira · MS</p><p class="note geo-footnote" id="geo-footnote">School dots use published GPS coordinates. The map is geographic context, not a map of students’ homes.</p></aside></div>
 <div class="geo-controls" role="group" aria-label="Choose a map view"><button type="button" data-geo="1" aria-pressed="false">01 <span>Portugal</span></button><button type="button" data-geo="2" aria-pressed="false">02 <span>Évora · GP</span></button><button type="button" data-geo="3" aria-pressed="false">03 <span>Portalegre · MS</span></button><button type="button" data-geo="4" aria-pressed="false">04 <span>Both schools</span></button><span id="geo-status" aria-live="polite">The journey starts when the map enters view.</span></div>
 <details class="geo-sources"><summary>Map & population sources</summary><p>School coordinates: Construção Pública’s <a href="https://construcaopublica.gov.pt/pt/escolas/028" target="_blank" rel="noreferrer">Gabriel Pereira</a> and <a href="https://construcaopublica.gov.pt/pt/escolas/027" target="_blank" rel="noreferrer">Mouzinho da Silveira</a> pages. Municipal populations (2021, INE as published by DGAL): <a href="https://www.portalautarquico.dgal.gov.pt/pt-PT/entidades-locais/concelhos/evora/" target="_blank" rel="noreferrer">Évora, 53,591</a>; <a href="https://portalautarquico.dgal.gov.pt/pt-PT/entidades-locais/concelhos/portalegre/" target="_blank" rel="noreferrer">Portalegre, 22,341</a>. These describe whole municipalities, not city-only populations, school enrollment or the historical study cohort. Outlines: <a href="https://github.com/datasets/geo-countries" target="_blank" rel="noreferrer">Natural Earth / geo-countries (public domain)</a> and <a href="https://portalgeo.iniav.pt/arcgis/rest/services/Hosted/Municipios/FeatureServer/4" target="_blank" rel="noreferrer">INIAV municipal boundary service</a>, simplified for display. All geometry is bundled for offline use.</p></details>
 </article>
@@ -55,7 +55,6 @@
 <article class="card hook-card" id="nursery">
 <p class="eyebrow">NURSERY ATTENDANCE · FINAL GRADE</p>
 <h3>Attending nursery school, nearly the same grades</h3>
-<p>Final-grade distributions for students who attended nursery school and those who did not.</p>
 <div id="nursery-box" class="chart boxplot"></div>
 <p class="chart-takeaway" id="nursery-takeaway"></p>
 <p class="note">Boxes show the middle 50%; center lines mark medians; whiskers extend to the most distant values within 1.5 × IQR. Outlier values beyond the whiskers, such as grades of 0, are not drawn but are still counted in the quartiles and medians. The no-nursery group is much smaller, so its box is less stable. Course records combined, n=<span id="nursery-n">1,044</span>; some students appear in both subjects.</p>
@@ -63,7 +62,6 @@
 <article class="card hook-card" id="famsize">
 <p class="eyebrow">FAMILY SIZE · FINAL GRADE</p>
 <h3>Different household sizes, nearly the same grades</h3>
-<p>Final-grade distributions for households of three or fewer people and households of more than three.</p>
 <div id="famsize-box" class="chart boxplot"></div>
 <p class="chart-takeaway" id="famsize-takeaway"></p>
 <p class="note">Boxes show the middle 50%; center lines mark medians; whiskers extend to the most distant values within 1.5 × IQR. Outlier values beyond the whiskers, such as grades of 0, are not drawn but are still counted in the quartiles and medians. Course records combined, n=<span id="famsize-n">1,044</span>; some students appear in both subjects.</p>
@@ -71,7 +69,6 @@
 <article class="card hook-card" id="paid">
 <p class="eyebrow">PAID CLASSES · FINAL GRADE</p>
 <h3>Paid classes, no grade advantage</h3>
-<p>Final-grade distributions for students taking extra paid classes in the course subject and those who are not.</p>
 <div id="paid-box" class="chart boxplot"></div>
 <p class="chart-takeaway" id="paid-takeaway"></p>
 <p class="note">Boxes show the middle 50%; center lines mark medians; whiskers extend to the most distant values within 1.5 × IQR. Outlier values beyond the whiskers, such as grades of 0, are not drawn but are still counted in the quartiles and medians. Paid classes are extra paid lessons in the course subject. Course records combined, n=<span id="paid-n">1,044</span>; some students appear in both subjects.</p>
@@ -86,7 +83,7 @@
 <p class="eyebrow">02 / RISING INSIGHTS</p>
 <h2>Motivation and Familial Disadvantages show Correlation with Grades</h2>
 <div class="story-grid rising">
-<article class="card wide-card">
+<article class="card wide-card" id="higher-card">
 <p class="eyebrow">HIGHER-EDUCATION PLANS</p>
 <h3>How grades flow from G1 to G3</h3>
 <div id="higher" class="chart progression"></div>
@@ -95,12 +92,8 @@
 <article class="card wide-card fig-card" id="network"><p class="eyebrow">HOW DISADVANTAGES CONNECT</p><h3>Which disadvantages travel together?</h3>
 <div class="fig-layout">
 <div class="fig-text">
-<p>Each arc is a risk factor. A ribbon joins two factors that show up together more often than chance; the darker and wider the ribbon, the stronger the link.</p>
-<ul class="fig-points">
-<li><strong>Click</strong> an arc or ribbon for its numbers; the same records are selected in the matrix below.</li>
-<li><strong>Drag the slider</strong> right to keep only the strongest links.</li>
-<li><strong>Esc</strong> or a click on empty space clears.</li>
-</ul>
+<p>Each arc is a risk factor; a ribbon links two that occur together more often than chance. Darker and wider means a stronger link.</p>
+<p class="fig-hint">Click an arc or ribbon · drag the slider · Esc clears</p>
 <div class="scatter-controls"><button id="network-clear" type="button">Clear selection</button><label class="net-threshold net-threshold-stack"><span>Show pairs at least <output id="net-lift-value">1.3×</output> more often than chance</span><input type="range" id="net-lift" min="1" max="2.5" step="0.1" value="1.3" aria-label="Minimum times more often than chance"></label><span id="network-selection" aria-live="polite"></span></div>
 <div id="net-callout"></div>
 <p class="note">2× = the two factors occur together twice as often as if they were unrelated (pairs with at least 10 shared records). Thicker arcs have more and stronger links. An association, not a cause.</p>
@@ -111,17 +104,12 @@
 <article class="card wide-card scatter-card fig-card" id="v7"><p class="eyebrow">SCATTERPLOT MATRIX</p><h3>What goes along with a higher final grade?</h3>
 <div class="fig-layout">
 <div class="fig-text">
-<p>Three behaviors a school can act on. Each cell plots one against another, and the diagonal shows each one's spread. Colour is the final grade: green passed (10+), amber did not. The final-grade bar chart counts records at each grade.</p>
-<ul class="fig-points">
-<li><strong>Drag a box</strong> in a cell to select; <strong>Shift</strong> adds a box.</li>
-<li><strong>Click a bar</strong>; Shift-click selects a range, Ctrl/⌘-click adds one.</li>
-<li><strong>Click a grade</strong> in the bar chart to select it everywhere.</li>
-<li>Chord-diagram selections show here too; <strong>Esc</strong> clears.</li>
-</ul>
+<p>Three behaviors a school can act on, plotted against each other. Green: final grade 10+; amber: below 10.</p>
+<p class="fig-hint">Drag a box or click a bar · Shift-click for a range · Esc clears</p>
 <div class="scatter-controls"><button id="matrix-clear" type="button">Clear selection</button><label class="add-toggle"><input type="checkbox" id="matrix-add">Add to selection <span>(or hold Shift)</span></label><label class="add-toggle"><input type="checkbox" id="matrix-failed">Only failed grades <span>(final grade below 10)</span></label><span id="matrix-selection" aria-live="polite"></span></div>
-<p class="note">Study time and alcohol use are ordinal survey codes, not exact quantities; absences is a count of school days missed. Final grade G3 is a separate final assessment, not the average of G1 and G2. Relationships are associations, not evidence of causation.</p>
+<p class="note">Study time and alcohol use are ordinal survey codes, not exact quantities; absences is a count of school days missed. Final grade G3 is a separate final assessment, not the average of G1 and G2. Relationships are associations, not evidence of causation. Values are whole numbers, so dots are spread slightly within each value to keep overlapping records visible; absences above 30 days (under 1% of records) share the 30+ band.</p>
 </div>
-<div class="fig-visual"><div class="matrix-layout"><div class="matrix-scroll"><div id="matrix" class="scatter-matrix"></div></div><aside class="grade-dist-panel" aria-label="Final grade distribution of the selected records"><h4>Final grade distribution</h4><div id="grade-dist" class="grade-dist"></div></aside></div><div class="legend matrix-legend"><span><i style="background:#2f6f4e"></i>Final grade ≥10</span><span><i style="background:#c4841d"></i>Final grade below 10</span><span><i style="background:#d6d1c7"></i>Outside your selection</span><span>Values are whole numbers; dots are spread slightly within each value so overlapping records stay visible. Absences above 30 days (under 1% of records) share the 30+ band.</span></div></div>
+<div class="fig-visual"><div class="matrix-layout"><div class="matrix-scroll"><div id="matrix" class="scatter-matrix"></div></div><aside class="grade-dist-panel" aria-label="Final grade distribution of the selected records"><h4>Final grade distribution</h4><div id="grade-dist" class="grade-dist"></div></aside></div><div class="legend matrix-legend"><span><i style="background:#2f6f4e"></i>Final grade ≥10</span><span><i style="background:#c4841d"></i>Final grade below 10</span><span><i style="background:#d6d1c7"></i>Outside your selection</span></div></div>
 </div>
 </article>
 </div>
@@ -131,12 +119,10 @@
 <p class="eyebrow">03 / MAIN MESSAGE</p>
 <h2>Past failure marks a concrete group for attention</h2>
 <p class="section-summary">Students with any recorded past failure are far more likely to fall below the passing threshold.</p>
-<p class="section-body" id="failure-body">Among students with any past failure, 55.2% score below 10 and mean G3 is 7.99; among students with no past failure, 15.0% score below 10 and mean G3 is 12.05. Past academic history therefore provides the school board with a concrete group for early attention.</p>
 <div class="stat-band" id="failure-stats"></div>
 <article class="card" id="failures-card">
 <p class="eyebrow">PREVIOUS FAILURES</p>
 <h3>The staircase of achievement</h3>
-<p>Mean final grade by recorded past failures. Step heights follow the observed group means.</p>
 <div id="failures" class="chart"></div>
 <p class="note">Course records, n=<span id="failure-n">1,044</span> (some students appear in both subjects). Groups with few records can produce unstable averages; the illustration is not a prediction about an individual student.</p>
 </article>
@@ -146,7 +132,7 @@
 <p class="eyebrow">04 / SOLUTION</p>
 <h2>Start with prior-failure records</h2>
 <p class="section-summary">The recommendation uses existing records to target outreach, then tests whether the support actually helps.</p>
-<p class="section-body">Use prior-failure records to begin early outreach, assess whether internet access or guardian circumstances create additional needs, offer targeted academic support, and track later outcomes to evaluate whether the support works. The lower observed average among school-support recipients may reflect that support is assigned to students already struggling, not that support harms grades.</p>
+<ol class="steps"><li><strong>Find</strong> students with a past failure</li><li><strong>Check</strong> access and home barriers</li><li><strong>Support</strong> with targeted tutoring</li><li><strong>Track</strong> later grades to see if it works</li></ol>
 <div class="story-grid solution">
 <article class="card" id="support-card">
 <p class="eyebrow">WHO RECEIVES SUPPORT?</p>
@@ -159,7 +145,7 @@
 <article class="card" id="tree-card">
 <p class="eyebrow">A SUPPORT CONVERSATION</p>
 <h3>Where could help begin?</h3>
-<p>An illustrative decision tree: follow the questions from left to right to reach one of eight starting points, each with record counts, mean final grades and pass shares. Answer Yes or No beside each question to reveal the next one. Both answers can be open at once to compare paths; click an open answer again to close its branch, or use Back to undo a step. Tick “Show full tree” to see every path.</p>
+<p>Answer Yes or No to follow a path to one of eight starting points.</p>
 <div id="tree" class="tree"></div>
 <p class="note">A transparent discussion aid, not a trained model or validated recommendation. Every student can request support.</p>
 </article>

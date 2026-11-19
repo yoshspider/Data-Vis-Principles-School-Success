@@ -127,7 +127,6 @@ function statBand(){
   const below=a=>100*a.filter(r=>r.G3<10).length/a.length;
   const pct=v=>v.toFixed(1)+'%';
   const avg=a=>a.length?mean(a).toFixed(2):'—';
-  $('failure-body').textContent=`Among students with any past failure, ${pct(below(any))} score below 10 and mean G3 is ${avg(any)}; among students with no past failure, ${pct(below(none))} score below 10 and mean G3 is ${avg(none)}. Past academic history therefore provides the school board with a concrete group for early attention.`;
   $('failure-stats').innerHTML=[
     [any.length?below(any).toFixed(1)+'%':'—','Below 10 · any past failure'],
     [avg(any)+' / 20','Mean G3 · any past failure'],
@@ -237,16 +236,15 @@ function supportChart(key){
   const share=rows=>rows.length?100*has(rows).length/rows.length:null;
   const low=records.filter(r=>context(r)<=1), high=records.filter(r=>context(r)>=3);
   const pct=v=>v===null?'—':v.toFixed(0)+'%';
-  const first=share(g[0]), last=share(g[4]), lo=share(low), hi=share(high);
-  const peak=g.map(share).reduce((b,v,i)=>v!==null&&v>b[0]?[v,i]:b,[-1,0]);
+  const lo=share(low), hi=share(high);
   const title=$('support-title'), text=$('support-text'), note=$('support-note');
   if(school){
     title.textContent='School support does not follow disadvantage';
-    text.innerHTML=`School support is <strong>not offered at higher rates to students with more disadvantages</strong>. ${pct(lo)} of records with 0 or 1 context factors receive it, compared with ${pct(hi)} of records with 3 or 4. The share is ${pct(first)} at zero factors, peaks at ${pct(peak[0])} with ${peak[1]} factors and falls to ${pct(last)} at four, so the students facing the most barriers are no more likely to be reached.`;
+    text.innerHTML=`<strong>${pct(lo)}</strong> of students with 0–1 disadvantages get school support, and <strong>${pct(hi)}</strong> with 3–4.`;
     note.textContent='School support is a yes/no record, not a measure of how much help was given. Groups with three or four factors are small, so their shares are unstable. Differences cannot measure the benefit of support.';
   }else{
     title.textContent='Family support is highest with the fewest disadvantages';
-    text.innerHTML=`Family support is <strong>higher where the disadvantage count is low</strong>. ${pct(lo)} of records with 0 or 1 context factors receive it, compared with ${pct(hi)} of records with 3 or 4. The share falls from ${pct(first)} at zero factors to ${pct(last)} at four, so families facing the most barriers are the least likely to report extra help at home.`;
+    text.innerHTML=`<strong>${pct(lo)}</strong> of students with 0–1 disadvantages get family support, but only <strong>${pct(hi)}</strong> with 3–4.`;
     note.textContent='Family support is a yes/no record, not a measure of how much help was given. Groups with three or four factors are small, so their shares are unstable. This is an association, not a cause.';
   }
   document.querySelectorAll('.support-toggle button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.support===key)));
