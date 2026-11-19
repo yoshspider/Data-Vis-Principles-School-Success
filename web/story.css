@@ -16,14 +16,16 @@ body.story{--story-paper:#f4f0e8;--story-surface:#fffdf8;--story-line:#d8d1c5;ba
 .story-section::before{content:attr(data-num);position:absolute;top:28px;right:0;font-size:clamp(78px,12vw,154px);font-weight:800;line-height:1;color:var(--teal);opacity:.055;pointer-events:none;z-index:0;letter-spacing:-.06em}
 .story-section>*{position:relative;z-index:1}
 .story-section>.eyebrow{margin:0 0 12px;font-size:11px;letter-spacing:2px;color:var(--teal)}
-.story-section h2{font-size:clamp(32px,4.6vw,52px);line-height:1.1;letter-spacing:-1.4px;margin:0 0 16px;font-weight:700;max-width:850px;text-wrap:balance}
-.section-summary{font-size:clamp(17px,2vw,20px);line-height:1.5;color:var(--ink);margin:0 0 14px;max-width:820px;font-weight:600}
+.story-section h2{font-size:clamp(30px,2.9vw,52px);line-height:1.12;letter-spacing:-1.2px;margin:0 0 18px;font-weight:700;max-width:none;white-space:nowrap;text-wrap:nowrap}
+#rising h2{font-size:clamp(28px,2.7vw,50px)}
+
+.section-summary{font-size:clamp(19px,2.1vw,24px);line-height:1.55;color:var(--ink);margin:0 0 16px;max-width:1050px;font-weight:400}
 .section-body{font-size:15px;line-height:1.75;color:var(--muted);margin:0 0 30px;max-width:900px}
 .story-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
 .story-grid>.card{min-width:0}
 .story .card{background:var(--story-surface);border-color:var(--story-line);border-radius:16px;padding:clamp(20px,3vw,32px);box-shadow:0 18px 44px rgba(31,42,36,.06)}
 .story .card>.eyebrow{color:var(--teal);letter-spacing:1.8px}
-.story .card h3{font-size:clamp(22px,2.5vw,29px);letter-spacing:-.6px}
+.story .card h3{font-size:clamp(25px,2.7vw,33px);letter-spacing:-.7px;font-weight:700}
 .story .card>.note{border-color:rgba(31,42,36,.09)}
 .hook-card{max-width:1100px;width:100%;margin:0 auto;border-top:4px solid var(--teal)!important}
 .story #famsize-box{max-width:1000px;width:100%;margin:4px auto 0}
@@ -138,7 +140,7 @@ html{scroll-behavior:smooth}
 .geo-sources{font-size:11px;line-height:1.6;color:var(--muted);margin-top:15px}
 .geo-sources summary{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .geo-sources p{margin-bottom:0}
-.geo-bridge{font:600 23px/1.35 Georgia,serif;max-width:720px;margin:0 0 16px}
+.geo-bridge{font:700 clamp(26px,2.6vw,34px)/1.25 Georgia,serif;max-width:1000px;margin:0 0 20px;letter-spacing:-.5px}
 .story-reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease var(--reveal-delay,0ms),transform .7s cubic-bezier(.22,.61,.36,1) var(--reveal-delay,0ms)}
 .story-reveal.is-visible{opacity:1;transform:none}
 @keyframes story-chart-in{from{opacity:.35}to{opacity:1}}
@@ -336,3 +338,8 @@ html{overflow-x:clip}   /* the bands are 100vw wide, which includes the scrollba
 .steps{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 30px;padding:0;list-style:none;counter-reset:step}
 .steps li{counter-increment:step;display:flex;align-items:center;gap:8px;padding:8px 14px 8px 8px;border-radius:999px;background:rgba(255,255,255,.7);font-size:14px;color:var(--ink)}
 .steps li::before{content:counter(step);display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--teal);color:#fff;font-size:12px;font-weight:700}
+
+/* Section headings run as one line across the page on wider screens. */
+@media(max-width:1099px){
+  .story-section h2,#rising h2{font-size:clamp(30px,5vw,44px);white-space:normal;text-wrap:balance}
+}
